@@ -103,8 +103,8 @@ export function ListingForm({ listing, isEditMode = false }: ListingFormProps) {
       title: "",
       description: "",
       price: "",
-      category: "",
-      location: "",
+      category: CATEGORIES[0].value,
+      location: LOCATIONS[0].value,
     },
   });
 

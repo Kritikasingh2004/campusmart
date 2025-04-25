@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function Navbar() {
-  // This would be replaced with actual auth logic
   const isLoggedIn = false;
 
   return (

@@ -54,7 +54,7 @@ type SearchFormValues = z.infer<typeof searchFormSchema>;
 
 // Categories and locations
 const CATEGORIES = [
-  { value: "", label: "All Categories" },
+  { value: "all", label: "All Categories" },
   { value: "books", label: "Books" },
   { value: "electronics", label: "Electronics" },
   { value: "furniture", label: "Furniture" },
@@ -63,7 +63,7 @@ const CATEGORIES = [
 ];
 
 const LOCATIONS = [
-  { value: "", label: "All Locations" },
+  { value: "all", label: "All Locations" },
   { value: "north-campus", label: "North Campus" },
   { value: "south-campus", label: "South Campus" },
   { value: "east-campus", label: "East Campus" },
@@ -91,8 +91,8 @@ export function SearchForm({ onSearch, compact = false }: SearchFormProps) {
     resolver: zodResolver(searchFormSchema),
     defaultValues: {
       query: searchParams.get("query") || "",
-      category: searchParams.get("category") || "",
-      location: searchParams.get("location") || "",
+      category: searchParams.get("category") || "all",
+      location: searchParams.get("location") || "all",
       minPrice: searchParams.get("minPrice") || "",
       maxPrice: searchParams.get("maxPrice") || "",
       sortBy:
@@ -127,8 +127,8 @@ export function SearchForm({ onSearch, compact = false }: SearchFormProps) {
   const handleReset = () => {
     form.reset({
       query: "",
-      category: "",
-      location: "",
+      category: "all",
+      location: "all",
       minPrice: "",
       maxPrice: "",
       sortBy: "newest",
@@ -139,8 +139,8 @@ export function SearchForm({ onSearch, compact = false }: SearchFormProps) {
     if (onSearch) {
       onSearch({
         query: "",
-        category: "",
-        location: "",
+        category: "all",
+        location: "all",
         minPrice: "",
         maxPrice: "",
         sortBy: "newest",

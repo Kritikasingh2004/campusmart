@@ -23,8 +23,8 @@ interface FiltersProps {
 
 export function Filters({ onFilterChange }: FiltersProps) {
   const [filters, setFilters] = useState({
-    category: "",
-    location: "",
+    category: "all",
+    location: "all",
     sort: "newest",
     search: "",
   });
@@ -57,7 +57,7 @@ export function Filters({ onFilterChange }: FiltersProps) {
             <SelectValue placeholder="All Categories" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Categories</SelectItem>
+            <SelectItem value="all">All Categories</SelectItem>
             <SelectItem value="books">Books</SelectItem>
             <SelectItem value="electronics">Electronics</SelectItem>
             <SelectItem value="furniture">Furniture</SelectItem>
@@ -74,7 +74,7 @@ export function Filters({ onFilterChange }: FiltersProps) {
             <SelectValue placeholder="All Locations" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Locations</SelectItem>
+            <SelectItem value="all">All Locations</SelectItem>
             <SelectItem value="north-campus">North Campus</SelectItem>
             <SelectItem value="south-campus">South Campus</SelectItem>
             <SelectItem value="east-campus">East Campus</SelectItem>
