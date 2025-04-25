@@ -113,9 +113,10 @@ export function generatePlaceholderImage(
   bgColor: string = "e2e8f0",
   textColor: string = "64748b"
 ): string {
-  return `https://placehold.co/${width}x${height}/${bgColor}/${textColor}?text=${encodeURIComponent(
+  // Use our local API route which is guaranteed to work with Next.js Image component
+  return `/api/placeholder?width=${width}&height=${height}&text=${encodeURIComponent(
     text
-  )}`;
+  )}&bgColor=${bgColor}&textColor=${textColor}`;
 }
 
 /**

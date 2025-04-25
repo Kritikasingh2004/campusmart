@@ -136,8 +136,8 @@ export function useSearch(initialFilters: SearchFilters = {}) {
 
   // Debounced function for updating search query
   const debouncedSearch = useCallback((query: string) => {
-    const debouncedFn = debounce((q: string) => {
-      setFilters((prev) => ({ ...prev, query: q }));
+    const debouncedFn = debounce(function (q: unknown) {
+      setFilters((prev) => ({ ...prev, query: q as string }));
     }, 300);
     debouncedFn(query);
   }, []);

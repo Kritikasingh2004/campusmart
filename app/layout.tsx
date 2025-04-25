@@ -14,8 +14,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CampusMart - Second-Hand Marketplace",
-  description: "Buy and sell second-hand items on campus",
+  title: "CampusMart - Buy and Sell Second-Hand Items on Campus",
+  description:
+    "Find affordable textbooks, furniture, electronics, and more from fellow students. The trusted marketplace for campus communities.",
+  keywords:
+    "campus marketplace, student marketplace, second-hand, used textbooks, college furniture, student deals",
 };
 
 export default function RootLayout({

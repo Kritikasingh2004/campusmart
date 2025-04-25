@@ -31,12 +31,13 @@ import Link from "next/link";
 
 interface UserListingsProps {
   limit?: number;
+  userId?: string;
 }
 
-export function UserListings({ limit }: UserListingsProps) {
+export function UserListings({ limit, userId }: UserListingsProps) {
   const { user } = useUser();
   const { listings, loading, error, deleteListing } = useListings({
-    userId: user?.id,
+    userId: userId || user?.id,
   });
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [displayListings, setDisplayListings] = useState<Listing[]>([]);

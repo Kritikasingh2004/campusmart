@@ -23,9 +23,13 @@ import {
 } from "recharts";
 import { Package, DollarSign, TrendingUp, ShoppingBag } from "lucide-react";
 
-export function DashboardStats() {
+interface DashboardStatsProps {
+  userId?: string;
+}
+
+export function DashboardStats({ userId }: DashboardStatsProps) {
   const { user } = useUser();
-  const { listings, loading } = useListings({ userId: user?.id });
+  const { listings, loading } = useListings({ userId: userId || user?.id });
   const [stats, setStats] = useState({
     totalListings: 0,
     totalValue: 0,

@@ -55,12 +55,20 @@ const profileFormSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 interface ProfileFormProps {
-  user?: User | null;
+  profile?: User | null;
   isEditMode?: boolean;
 }
 
-export function ProfileForm({ user, isEditMode = false }: ProfileFormProps) {
-  const { profile, isSubmitting, createProfile, updateProfile } = useProfile();
+export function ProfileForm({
+  profile: profileProp,
+  isEditMode = false,
+}: ProfileFormProps) {
+  const {
+    profile: userProfile,
+    isSubmitting,
+    createProfile,
+    updateProfile,
+  } = useProfile();
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
@@ -75,10 +83,10 @@ export function ProfileForm({ user, isEditMode = false }: ProfileFormProps) {
     },
   });
 
-  // Update form values when user data is available
+  // Update form values when profile data is available
   useEffect(() => {
-    if (isEditMode && (user || profile)) {
-      const userData = user || profile;
+    if (isEditMode && (profileProp || userProfile)) {
+      const userData = profileProp || userProfile;
       if (userData) {
         form.reset({
           name: userData.name || "",
@@ -92,7 +100,7 @@ export function ProfileForm({ user, isEditMode = false }: ProfileFormProps) {
         }
       }
     }
-  }, [form, user, profile, isEditMode]);
+  }, [form, profileProp, userProfile, isEditMode]);
 
   // Handle form submission
   const onSubmit = async (data: ProfileFormValues) => {

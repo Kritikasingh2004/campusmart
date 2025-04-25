@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { LoginButton } from "@/components/auth/login-button";
 import {
   Card,
@@ -10,9 +11,22 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
-export default function LoginPage() {
+function LoginContent() {
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect");
+  const error = searchParams.get("error");
+
+  // Error messages based on error code
+  const errorMessages = {
+    auth_error: "Authentication failed. Please try again.",
+    server_error: "Server error occurred. Please try again later.",
+  };
+
   return (
     <Card className="w-full">
       <CardHeader className="space-y-1">
@@ -22,7 +36,17 @@ export default function LoginPage() {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        <LoginButton className="w-full" />
+        {error && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              {errorMessages[error as keyof typeof errorMessages] ||
+                "An error occurred. Please try again."}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        <LoginButton className="w-full" redirectTo={redirect || undefined} />
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
@@ -62,5 +86,13 @@ export default function LoginPage() {
         </Link>
       </CardFooter>
     </Card>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }

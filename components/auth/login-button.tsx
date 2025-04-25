@@ -14,19 +14,21 @@ interface LoginButtonProps {
     | "destructive";
   size?: "default" | "sm" | "lg" | "icon";
   className?: string;
+  redirectTo?: string;
 }
 
 export function LoginButton({
   variant = "default",
   size = "default",
   className,
+  redirectTo,
 }: LoginButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
     try {
       setIsLoading(true);
-      await signInWithGoogle();
+      await signInWithGoogle(redirectTo);
     } catch (error) {
       console.error("Login error:", error);
     } finally {

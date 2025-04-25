@@ -1,11 +1,22 @@
 import { getSupabaseBrowserClient } from "./client";
 
-export async function signInWithGoogle() {
+export async function signInWithGoogle(redirectTo?: string) {
   const supabase = getSupabaseBrowserClient();
+
+  // Get the redirect URL from the current URL if it exists
+  const urlParams = new URLSearchParams(window.location.search);
+  const redirect = redirectTo || urlParams.get("redirect") || "/dashboard";
+
+  // Build the callback URL with the redirect parameter
+  const callbackUrl = new URL(`${window.location.origin}/callback`);
+  if (redirect) {
+    callbackUrl.searchParams.set("redirect", redirect);
+  }
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${window.location.origin}/callback`,
+      redirectTo: callbackUrl.toString(),
       queryParams: {
         access_type: "offline",
         prompt: "consent",

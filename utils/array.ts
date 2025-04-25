@@ -22,35 +22,33 @@ export function groupBy<T>(array: T[], key: keyof T): Record<string, T[]> {
 export function sortBy<T>(
   array: T[],
   key: keyof T,
-  direction: 'asc' | 'desc' = 'asc'
+  direction: "asc" | "desc" = "asc"
 ): T[] {
   return [...array].sort((a, b) => {
     const valueA = a[key];
     const valueB = b[key];
-    
+
     // Handle string comparison
-    if (typeof valueA === 'string' && typeof valueB === 'string') {
-      return direction === 'asc'
+    if (typeof valueA === "string" && typeof valueB === "string") {
+      return direction === "asc"
         ? valueA.localeCompare(valueB)
         : valueB.localeCompare(valueA);
     }
-    
+
     // Handle number comparison
-    if (typeof valueA === 'number' && typeof valueB === 'number') {
-      return direction === 'asc'
-        ? valueA - valueB
-        : valueB - valueA;
+    if (typeof valueA === "number" && typeof valueB === "number") {
+      return direction === "asc" ? valueA - valueB : valueB - valueA;
     }
-    
+
     // Handle date comparison
     if (valueA instanceof Date && valueB instanceof Date) {
-      return direction === 'asc'
+      return direction === "asc"
         ? valueA.getTime() - valueB.getTime()
         : valueB.getTime() - valueA.getTime();
     }
-    
+
     // Default comparison
-    return direction === 'asc'
+    return direction === "asc"
       ? String(valueA).localeCompare(String(valueB))
       : String(valueB).localeCompare(String(valueA));
   });
@@ -65,11 +63,11 @@ export function filterBySearchTerm<T>(
   keys: (keyof T)[]
 ): T[] {
   if (!searchTerm) return array;
-  
+
   const lowerCaseSearchTerm = searchTerm.toLowerCase();
-  
-  return array.filter(item => {
-    return keys.some(key => {
+
+  return array.filter((item) => {
+    return keys.some((key) => {
       const value = item[key];
       if (value === null || value === undefined) return false;
       return String(value).toLowerCase().includes(lowerCaseSearchTerm);
@@ -89,7 +87,7 @@ export function removeDuplicates<T>(array: T[]): T[] {
  */
 export function removeDuplicatesByKey<T>(array: T[], key: keyof T): T[] {
   const seen = new Set();
-  return array.filter(item => {
+  return array.filter((item) => {
     const value = item[key];
     if (seen.has(value)) return false;
     seen.add(value);
@@ -112,8 +110,11 @@ export function chunkArray<T>(array: T[], size: number): T[][] {
  * Flatten a nested array
  */
 export function flattenArray<T>(array: (T | T[])[]): T[] {
-  return array.reduce((result, item) => {
-    return result.concat(Array.isArray(item) ? flattenArray(item) : item);
+  return array.reduce((result: T[], item) => {
+    if (Array.isArray(item)) {
+      return [...result, ...flattenArray(item)];
+    }
+    return [...result, item];
   }, [] as T[]);
 }
 
@@ -140,7 +141,7 @@ export function omit<T extends object, K extends keyof T>(
   keys: K[]
 ): Omit<T, K> {
   const result = { ...obj };
-  keys.forEach(key => {
+  keys.forEach((key) => {
     delete result[key];
   });
   return result as Omit<T, K>;

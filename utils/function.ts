@@ -53,19 +53,19 @@ export function memoize<T extends (...args: unknown[]) => unknown>(
   func: T,
   resolver?: (...args: Parameters<T>) => string
 ): (...args: Parameters<T>) => ReturnType<T> {
-  const cache = new Map<string, ReturnType<T>>();
+  const cache = new Map<string, unknown>();
 
   return function (...args: Parameters<T>): ReturnType<T> {
     const key = resolver ? resolver(...args) : JSON.stringify(args);
 
     if (cache.has(key)) {
-      return cache.get(key)!;
+      return cache.get(key) as ReturnType<T>;
     }
 
     const result = func(...args);
     cache.set(key, result);
 
-    return result;
+    return result as ReturnType<T>;
   };
 }
 
@@ -76,7 +76,7 @@ export function memoize<T extends (...args: unknown[]) => unknown>(
 export function once<T extends (...args: unknown[]) => unknown>(
   func: T
 ): (...args: Parameters<T>) => ReturnType<T> {
-  let result: ReturnType<T>;
+  let result: unknown;
   let called = false;
 
   return function (...args: Parameters<T>): ReturnType<T> {
@@ -85,7 +85,7 @@ export function once<T extends (...args: unknown[]) => unknown>(
       result = func(...args);
     }
 
-    return result;
+    return result as ReturnType<T>;
   };
 }
 
@@ -102,6 +102,7 @@ export function overArgs<T extends (...args: unknown[]) => unknown>(
       return transforms[index] ? transforms[index](arg) : arg;
     });
 
-    return func(...(transformedArgs as Parameters<T>));
+    const result = func(...(transformedArgs as Parameters<T>));
+    return result as ReturnType<T>;
   };
 }

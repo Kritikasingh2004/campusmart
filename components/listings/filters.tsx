@@ -19,14 +19,20 @@ interface FiltersProps {
     sort?: string;
     search?: string;
   }) => void;
+  initialFilters?: {
+    category?: string;
+    location?: string;
+    sort?: string;
+    search?: string;
+  };
 }
 
-export function Filters({ onFilterChange }: FiltersProps) {
+export function Filters({ onFilterChange, initialFilters }: FiltersProps) {
   const [filters, setFilters] = useState({
-    category: "all",
-    location: "all",
-    sort: "newest",
-    search: "",
+    category: initialFilters?.category || "all",
+    location: initialFilters?.location || "all",
+    sort: initialFilters?.sort || "newest",
+    search: initialFilters?.search || "",
   });
 
   const handleFilterChange = (key: string, value: string) => {
