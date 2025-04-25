@@ -1,103 +1,168 @@
-import Image from "next/image";
+import { Navbar } from "@/components/layout/navbar";
+import { Footer } from "@/components/layout/footer";
+import { Container } from "@/components/layout/container";
+import { PageHeader } from "@/components/layout/page-header";
+import { Filters } from "@/components/listings/filters";
+import { ProductCard } from "@/components/listings/product-card";
+import { SearchBar } from "@/components/listings/search-bar";
+import { generatePlaceholderImage } from "@/utils/image";
+import { sortBy, groupBy } from "@/utils/array";
+import { capitalizeWords } from "@/utils/string";
+
+// Mock data for initial development
+const MOCK_LISTINGS_RAW = [
+  {
+    id: "1",
+    title: "calculus textbook",
+    price: 450,
+    imageUrl: "",
+    location: "north campus",
+    category: "books",
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(), // 2 days ago
+  },
+  {
+    id: "2",
+    title: "study desk",
+    price: 1200,
+    imageUrl: "",
+    location: "south campus",
+    category: "furniture",
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5 hours ago
+  },
+  {
+    id: "3",
+    title: "scientific calculator",
+    price: 800,
+    imageUrl: "",
+    location: "east campus",
+    category: "electronics",
+    createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 minutes ago
+  },
+  {
+    id: "4",
+    title: "laptop stand",
+    price: 350,
+    imageUrl: "",
+    location: "west campus",
+    category: "electronics",
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(), // 2 days ago
+  },
+  {
+    id: "5",
+    title: "college hoodie",
+    price: 600,
+    imageUrl: "",
+    location: "north campus",
+    category: "clothing",
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 72).toISOString(), // 3 days ago
+  },
+  {
+    id: "6",
+    title: "chemistry lab manual",
+    price: 250,
+    imageUrl: "",
+    location: "south campus",
+    category: "books",
+    createdAt: new Date(Date.now() - 1000 * 60 * 10).toISOString(), // 10 minutes ago
+  },
+];
+
+// Process the mock data using our utility functions
+const MOCK_LISTINGS = MOCK_LISTINGS_RAW.map((listing) => ({
+  ...listing,
+  title: capitalizeWords(listing.title),
+  location: capitalizeWords(listing.location),
+  category: capitalizeWords(listing.category),
+  imageUrl: generatePlaceholderImage(
+    300,
+    300,
+    listing.title,
+    "e2e8f0",
+    "64748b"
+  ),
+}));
+
+// Group listings by category (for demonstration)
+const listingsByCategory = groupBy(MOCK_LISTINGS, "category");
+
+// Sort listings by price (for demonstration)
+const listingsSortedByPrice = sortBy(MOCK_LISTINGS, "price", "asc");
 
 export default function Home() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+      <main className="flex-1">
+        <Container className="py-8">
+          <div className="mb-8 max-w-3xl">
+            <PageHeader
+              title="Campus Marketplace"
+              description="Buy and sell second-hand items on campus easily and safely."
+            >
+              <div className="mt-4">
+                <SearchBar
+                  onSearch={(query) => console.log("Search:", query)}
+                  placeholder="Search for textbooks, furniture, electronics..."
+                />
+              </div>
+            </PageHeader>
+          </div>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+          <div className="mt-8">
+            <Filters
+              onFilterChange={(filters) => console.log("Filters:", filters)}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
+          </div>
+
+          {/* Display listings sorted by price */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4">
+              Listings by Price (Low to High)
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {listingsSortedByPrice.map((listing) => (
+                <ProductCard
+                  key={listing.id}
+                  id={listing.id}
+                  title={listing.title}
+                  price={listing.price}
+                  imageUrl={listing.imageUrl}
+                  location={listing.location}
+                  category={listing.category}
+                  createdAt={listing.createdAt}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Display listings grouped by category */}
+          <div className="mt-12">
+            <h2 className="text-2xl font-semibold mb-4">
+              Listings by Category
+            </h2>
+            {Object.entries(listingsByCategory).map(([category, listings]) => (
+              <div key={category} className="mb-8">
+                <h3 className="text-xl font-medium mb-4">{category}</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {listings.map((listing) => (
+                    <ProductCard
+                      key={listing.id}
+                      id={listing.id}
+                      title={listing.title}
+                      price={listing.price}
+                      imageUrl={listing.imageUrl}
+                      location={listing.location}
+                      category={listing.category}
+                      createdAt={listing.createdAt}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Container>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      <Footer />
     </div>
   );
 }
