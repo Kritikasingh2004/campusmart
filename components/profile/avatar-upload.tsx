@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Camera, X } from "lucide-react";
 import { isImageFile, isFileSizeValid } from "@/utils/validation";
 import { getInitials } from "@/utils/string";
+import { ImageCropperDialog } from "@/components/shared/image-cropper-dialog";
+import { blobToFile } from "@/utils/image";
 
 interface AvatarUploadProps {
   initialImage?: string | null;
@@ -24,6 +26,9 @@ export function AvatarUpload({
   const [preview, setPreview] = useState<string | null>(initialImage || null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [originalFile, setOriginalFile] = useState<File | null>(null);
 
   // Update preview when initialImage changes
   useEffect(() => {
@@ -75,17 +80,28 @@ export function AvatarUpload({
       return;
     }
 
-    // Create preview
+    // Store the original file
+    setOriginalFile(file);
+
+    // Create preview and open cropper
     const objectUrl = URL.createObjectURL(file);
-    setPreview(objectUrl);
+    setSelectedImage(objectUrl);
+    setCropperOpen(true);
+  };
 
-    // Call the callback
+  // Handle cropped image
+  const handleCropComplete = (croppedBlob: Blob) => {
+    if (!originalFile) return;
+
+    // Create a preview URL for the cropped image
+    const croppedPreviewUrl = URL.createObjectURL(croppedBlob);
+    setPreview(croppedPreviewUrl);
+
+    // Convert blob to File and call the callback
+    const croppedFile = blobToFile(croppedBlob, originalFile.name);
     if (onImageChange) {
-      onImageChange(file);
+      onImageChange(croppedFile);
     }
-
-    // Clean up previous preview URL
-    return () => URL.revokeObjectURL(objectUrl);
   };
 
   // Trigger file input click
@@ -159,6 +175,28 @@ export function AvatarUpload({
         <p className="text-xs text-muted-foreground mt-1">
           Click the camera icon to upload your avatar
         </p>
+      )}
+
+      {/* Image Cropper Dialog */}
+      {selectedImage && (
+        <ImageCropperDialog
+          open={cropperOpen}
+          onClose={() => {
+            setCropperOpen(false);
+            URL.revokeObjectURL(selectedImage);
+            setSelectedImage(null);
+          }}
+          imageUrl={selectedImage}
+          aspectRatio={1} // Square for avatar
+          maxSizeMB={0.5} // Stricter 500KB limit for avatars
+          onCropComplete={handleCropComplete}
+          onError={(error) => {
+            setError(error.message);
+            setCropperOpen(false);
+            URL.revokeObjectURL(selectedImage);
+            setSelectedImage(null);
+          }}
+        />
       )}
     </div>
   );

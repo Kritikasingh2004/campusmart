@@ -63,5 +63,30 @@ export function isImageFile(file: File): boolean {
  */
 export function isFileSizeValid(file: File, maxSizeMB: number): boolean {
   const maxSizeBytes = maxSizeMB * 1024 * 1024;
-  return file.size <= maxSizeBytes;
+  const isValid = file.size <= maxSizeBytes;
+
+  // Log file size for debugging
+  if (!isValid) {
+    console.warn(
+      `File size validation failed: ${(file.size / (1024 * 1024)).toFixed(
+        2
+      )}MB exceeds limit of ${maxSizeMB}MB`
+    );
+  }
+
+  return isValid;
+}
+
+/**
+ * Strictly validate file size with no tolerance
+ * This is used after compression to ensure we never upload files larger than the limit
+ */
+export function enforceFileSizeLimit(blob: Blob, maxSizeMB: number): void {
+  const maxSizeBytes = maxSizeMB * 1024 * 1024;
+  if (blob.size > maxSizeBytes) {
+    const sizeMB = (blob.size / (1024 * 1024)).toFixed(2);
+    throw new Error(
+      `Image size (${sizeMB}MB) exceeds the maximum allowed size of ${maxSizeMB}MB`
+    );
+  }
 }
