@@ -42,11 +42,28 @@ export function Navbar() {
               <DropdownMenu>
                 <DropdownMenuTrigger>
                   <Avatar>
-                    <AvatarImage
-                      src={user.user_metadata?.avatar_url || ""}
-                      alt={user.user_metadata?.name || "User"}
-                    />
-                    <AvatarFallback>
+                    {user.user_metadata?.avatar_url ? (
+                      <AvatarImage
+                        src={user.user_metadata.avatar_url}
+                        alt={user.user_metadata?.name || "User"}
+                        onError={(e) => {
+                          console.error(
+                            "Failed to load navbar avatar:",
+                            user.user_metadata?.avatar_url
+                          );
+                          // Hide the image element on error
+                          e.currentTarget.style.display = "none";
+                          // Show the fallback
+                          e.currentTarget.parentElement
+                            ?.querySelector("[data-fallback]")
+                            ?.removeAttribute("hidden");
+                        }}
+                      />
+                    ) : null}
+                    <AvatarFallback
+                      data-fallback
+                      hidden={!!user.user_metadata?.avatar_url}
+                    >
                       {getInitials(user.user_metadata?.name || "User")}
                     </AvatarFallback>
                   </Avatar>
@@ -60,7 +77,7 @@ export function Navbar() {
                     <Link href="/dashboard">Dashboard</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/edit-profile">Edit Profile</Link>
+                    <Link href="/profile">My Profile</Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, ChangeEvent } from "react";
+import { useState, useRef, useEffect, ChangeEvent } from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -12,16 +12,40 @@ interface AvatarUploadProps {
   initialImage?: string | null;
   onImageChange?: (file: File | null) => void;
   size?: "sm" | "md" | "lg";
+  readOnly?: boolean;
 }
 
 export function AvatarUpload({
   initialImage,
   onImageChange,
   size = "lg",
+  readOnly = false,
 }: AvatarUploadProps) {
   const [preview, setPreview] = useState<string | null>(initialImage || null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Update preview when initialImage changes
+  useEffect(() => {
+    if (initialImage) {
+      // Test if the image URL is valid
+      const img = new Image();
+      img.onload = () => {
+        // Image loaded successfully, set the preview
+        setPreview(initialImage);
+      };
+      img.onerror = () => {
+        // Image failed to load, log error and use fallback
+        console.error("Failed to load avatar image from URL:", initialImage);
+        setPreview(null);
+      };
+
+      // Start loading the image
+      img.src = initialImage;
+    } else {
+      setPreview(null);
+    }
+  }, [initialImage]);
 
   // Size mapping
   const sizeClasses = {
@@ -93,8 +117,8 @@ export function AvatarUpload({
           )}
         </Avatar>
 
-        {/* Remove button */}
-        {preview && (
+        {/* Remove button - only show if not in read-only mode */}
+        {preview && !readOnly && (
           <Button
             type="button"
             size="icon"
@@ -106,15 +130,17 @@ export function AvatarUpload({
           </Button>
         )}
 
-        {/* Upload button */}
-        <Button
-          type="button"
-          size="icon"
-          className="absolute bottom-0 right-0 h-8 w-8 rounded-full"
-          onClick={handleButtonClick}
-        >
-          <Camera className="h-4 w-4" />
-        </Button>
+        {/* Upload button - only show if not in read-only mode */}
+        {!readOnly && (
+          <Button
+            type="button"
+            size="icon"
+            className="absolute bottom-0 right-0 h-8 w-8 rounded-full"
+            onClick={handleButtonClick}
+          >
+            <Camera className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
       {/* Hidden file input */}
@@ -129,9 +155,11 @@ export function AvatarUpload({
       {/* Error message */}
       {error && <p className="text-xs text-destructive mt-1">{error}</p>}
 
-      <p className="text-xs text-muted-foreground mt-1">
-        Click the camera icon to upload your avatar
-      </p>
+      {!readOnly && (
+        <p className="text-xs text-muted-foreground mt-1">
+          Click the camera icon to upload your avatar
+        </p>
+      )}
     </div>
   );
 }

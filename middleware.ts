@@ -38,7 +38,7 @@ export async function middleware(request: NextRequest) {
       "/dashboard",
       "/create-listing",
       "/edit-listing",
-      "/edit-profile",
+      "/profile",
       "/messages",
       "/favorites",
       "/settings",
