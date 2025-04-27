@@ -39,9 +39,7 @@ export async function middleware(request: NextRequest) {
       "/create-listing",
       "/edit-listing",
       "/profile",
-      "/messages",
-      "/favorites",
-      "/settings",
+      "/create-profile",
     ];
 
     // Check if the current route is protected
