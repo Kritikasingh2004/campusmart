@@ -28,24 +28,43 @@ export function EditListingClient({ id, mockListing }: EditListingClientProps) {
     const fetchListing = async () => {
       try {
         setLoading(true);
-        // In a real app, this would fetch from Supabase
-        // const { data } = await getListing(id);
-        // setListing(data);
-        
-        // For now, use mock data
-        setTimeout(() => {
+
+        // Import createClient here to avoid "use client" directive issues
+        const { createClient } = await import("@/utils/supabase/client");
+        const supabase = createClient();
+
+        // Fetch the listing from Supabase
+        const { data, error } = await supabase
+          .from("listings")
+          .select("*")
+          .eq("id", id)
+          .single();
+
+        if (error) {
+          throw error;
+        }
+
+        if (data) {
+          console.log("Fetched listing for edit:", data);
+          setListing(data);
+        } else {
+          // Fallback to mock data if no real data is found
+          console.log("No listing found for edit, using mock data");
           setListing(mockListing);
-          setLoading(false);
-        }, 500);
+          toast.warning("Using demo data as listing was not found");
+        }
       } catch (error) {
         console.error("Error fetching listing:", error);
         toast.error("Failed to load listing");
+        // Fallback to mock data on error
+        setListing(mockListing);
+      } finally {
         setLoading(false);
       }
     };
 
     fetchListing();
-  }, [id, mockListing]);
+  }, [id, mockListing, toast]);
 
   // Check if user is the owner of the listing
   useEffect(() => {
@@ -65,7 +84,7 @@ export function EditListingClient({ id, mockListing }: EditListingClientProps) {
               title="Edit Listing"
               description="Update your listing information"
             />
-            
+
             <div className="mt-8">
               {loading ? (
                 <div className="space-y-4 max-w-2xl mx-auto">
@@ -85,8 +104,8 @@ export function EditListingClient({ id, mockListing }: EditListingClientProps) {
                 <div className="text-center py-12">
                   <h2 className="text-2xl font-bold mb-2">Listing Not Found</h2>
                   <p className="text-muted-foreground">
-                    The listing you&apos;re trying to edit doesn&apos;t exist or has been
-                    removed.
+                    The listing you&apos;re trying to edit doesn&apos;t exist or
+                    has been removed.
                   </p>
                 </div>
               )}

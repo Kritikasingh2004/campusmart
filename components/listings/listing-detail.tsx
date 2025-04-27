@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Listing } from "@/types/listing";
@@ -30,6 +31,48 @@ export function ListingDetail({
   isLoading = false,
 }: ListingDetailProps) {
   const { user } = useUser();
+  const [sellerData, setSellerData] = useState<User | null>(null);
+
+  // If seller is not provided, try to get it from the listing.users relation
+  useEffect(() => {
+    const getSeller = async () => {
+      if (seller) {
+        setSellerData(seller);
+        return;
+      }
+
+      // If listing has users data from a join, use that
+      if (listing.users) {
+        setSellerData(listing.users);
+        return;
+      }
+
+      // Otherwise fetch the seller data
+      try {
+        const { createClient } = await import("@/utils/supabase/client");
+        const supabase = createClient();
+
+        const { data, error } = await supabase
+          .from("users")
+          .select("*")
+          .eq("id", listing.user_id)
+          .single();
+
+        if (error) {
+          console.error("Error fetching seller:", error);
+          return;
+        }
+
+        if (data) {
+          setSellerData(data);
+        }
+      } catch (error) {
+        console.error("Error in seller fetch:", error);
+      }
+    };
+
+    getSeller();
+  }, [listing, seller]);
 
   const isCurrentUserListing = user?.id === listing.user_id;
 
@@ -117,8 +160,8 @@ export function ListingDetail({
               </div>
             </TabsContent>
             <TabsContent value="seller" className="pt-4">
-              {seller ? (
-                <UserInfo user={seller} />
+              {sellerData ? (
+                <UserInfo user={sellerData} />
               ) : (
                 <Card>
                   <CardContent className="p-4">
@@ -138,13 +181,13 @@ export function ListingDetail({
             ) : (
               <>
                 <Button className="flex-1" asChild>
-                  <Link href={`mailto:${seller?.email || ""}`}>
+                  <Link href={`mailto:${sellerData?.email || ""}`}>
                     Contact Seller
                   </Link>
                 </Button>
-                {seller?.phone && (
+                {sellerData?.phone && (
                   <Button variant="outline" className="flex-1" asChild>
-                    <Link href={`tel:${seller.phone}`}>Call Seller</Link>
+                    <Link href={`tel:${sellerData.phone}`}>Call Seller</Link>
                   </Button>
                 )}
               </>
