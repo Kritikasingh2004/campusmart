@@ -20,6 +20,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
 
+  // Fetch profile data whenever the component mounts or user changes
   useEffect(() => {
     const fetchProfile = async () => {
       if (!user) {
@@ -28,6 +29,7 @@ export default function ProfilePage() {
       }
 
       try {
+        setLoading(true);
         const supabase = createClient();
         const { data, error } = await supabase
           .from("users")
@@ -49,6 +51,13 @@ export default function ProfilePage() {
     };
 
     fetchProfile();
+
+    // Set up an interval to refresh the profile data every 30 seconds
+    // This ensures the data stays fresh even if the page is open for a long time
+    const refreshInterval = setInterval(fetchProfile, 30000);
+
+    // Clean up the interval when the component unmounts
+    return () => clearInterval(refreshInterval);
   }, [user]);
 
   const toggleEditMode = () => {
