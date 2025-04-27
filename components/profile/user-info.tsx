@@ -78,12 +78,27 @@ export function UserInfo({
       <CardHeader className="flex flex-row items-start gap-4">
         <Avatar className="h-16 w-16 border-2 border-border">
           {user.avatar_url ? (
-            <AvatarImage src={user.avatar_url} alt={user.name} />
-          ) : (
-            <AvatarFallback className="bg-primary/10 text-primary text-xl">
-              {getInitials(user.name)}
-            </AvatarFallback>
-          )}
+            <AvatarImage
+              src={user.avatar_url}
+              alt={user.name}
+              onError={(e) => {
+                console.error("Failed to load avatar image:", user.avatar_url);
+                // Hide the image element on error
+                e.currentTarget.style.display = "none";
+                // Show the fallback
+                e.currentTarget.parentElement
+                  ?.querySelector("[data-fallback]")
+                  ?.removeAttribute("hidden");
+              }}
+            />
+          ) : null}
+          <AvatarFallback
+            className="bg-primary/10 text-primary text-xl"
+            data-fallback
+            hidden={!!user.avatar_url}
+          >
+            {getInitials(user.name)}
+          </AvatarFallback>
         </Avatar>
         <div className="flex-1">
           <CardTitle className="text-xl">{user.name}</CardTitle>

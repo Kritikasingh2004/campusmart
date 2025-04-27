@@ -96,7 +96,25 @@ export function ProfileForm({
   // Set avatar preview from user data
   useEffect(() => {
     if (userData?.avatar_url) {
-      setAvatarPreview(userData.avatar_url);
+      console.log("Setting avatar from user data:", userData.avatar_url);
+
+      // Create an image element to test if the URL is valid
+      const img = new Image();
+      img.onload = () => {
+        // Image loaded successfully, set the preview
+        setAvatarPreview(userData.avatar_url || null);
+      };
+      img.onerror = () => {
+        // Image failed to load, log error and use fallback
+        console.error(
+          "Failed to load avatar image from URL:",
+          userData.avatar_url
+        );
+        setAvatarPreview(null);
+      };
+
+      // Start loading the image
+      img.src = userData.avatar_url;
     }
   }, [userData]);
 

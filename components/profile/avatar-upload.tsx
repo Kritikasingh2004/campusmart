@@ -28,7 +28,22 @@ export function AvatarUpload({
   // Update preview when initialImage changes
   useEffect(() => {
     if (initialImage) {
-      setPreview(initialImage);
+      // Test if the image URL is valid
+      const img = new Image();
+      img.onload = () => {
+        // Image loaded successfully, set the preview
+        setPreview(initialImage);
+      };
+      img.onerror = () => {
+        // Image failed to load, log error and use fallback
+        console.error("Failed to load avatar image from URL:", initialImage);
+        setPreview(null);
+      };
+
+      // Start loading the image
+      img.src = initialImage;
+    } else {
+      setPreview(null);
     }
   }, [initialImage]);
 
