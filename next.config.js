@@ -17,6 +17,16 @@ const nextConfig = {
         hostname: "dummyimage.com",
         pathname: "**",
       },
+      {
+        protocol: "https",
+        hostname: "floidcaklqvlytsligvk.supabase.co",
+        pathname: "**",
+      },
+      {
+        protocol: "https",
+        hostname: "*.supabase.co",
+        pathname: "**",
+      },
     ],
     dangerouslyAllowSVG: true,
     contentDispositionType: "attachment",

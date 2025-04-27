@@ -5,7 +5,12 @@ import { useAuth } from "@/contexts/auth-context";
 import { createClient } from "@/utils/supabase/client";
 import { useFormSubmit } from "./use-form-submit";
 import { Listing } from "@/types/listing";
-import { resizeImage } from "@/utils/image";
+import {
+  resizeImage,
+  compressImage,
+  blobToFile,
+  deleteImageFromStorage,
+} from "@/utils/image";
 
 export function useListingForm(listingId?: string) {
   const { user } = useAuth();
@@ -56,8 +61,19 @@ export function useListingForm(listingId?: string) {
 
         // Upload image if provided
         if (image) {
-          // Resize image before uploading
+          // Process the image: resize, crop (already done by ImageUpload), and compress
           const resizedImage = await resizeImage(image, 1200, 1200);
+
+          // Convert File to Blob for compression
+          const imageBlob = await resizedImage
+            .arrayBuffer()
+            .then((buffer) => new Blob([buffer], { type: resizedImage.type }));
+
+          // Compress the image
+          const compressedBlob = await compressImage(imageBlob, 0.8, 1200);
+
+          // Convert back to File for upload
+          const processedImage = blobToFile(compressedBlob, image.name);
 
           // Upload to Supabase Storage
           const fileExt = image.name.split(".").pop();
@@ -68,7 +84,12 @@ export function useListingForm(listingId?: string) {
 
           const { error: uploadError } = await supabase.storage
             .from("listings")
-            .upload(filePath, resizedImage);
+            .upload(filePath, processedImage, {
+              upsert: false,
+              metadata: {
+                owner: user.id, // Set the owner metadata for RLS policies
+              },
+            });
 
           if (uploadError) {
             throw uploadError;
@@ -124,12 +145,79 @@ export function useListingForm(listingId?: string) {
 
     return handleSubmit(
       async () => {
+        // First, get the current listing to check for existing image
+        const { data: currentListing, error: fetchError } = await supabase
+          .from("listings")
+          .select("*")
+          .eq("id", listingId)
+          .eq("user_id", user.id) // Ensure the user owns the listing
+          .single();
+
+        if (fetchError) {
+          throw fetchError;
+        }
+
         const updateData: Record<string, unknown> = { ...listingData };
+        let oldImagePath: string | null = null;
+
+        // Extract the old image path if it exists
+        if (currentListing?.image_url) {
+          try {
+            console.log(
+              "Extracting path from old image URL:",
+              currentListing.image_url
+            );
+
+            const url = new URL(currentListing.image_url);
+            const fullPath = url.pathname;
+            console.log("Full URL path:", fullPath);
+
+            // Different extraction methods to handle various URL formats
+            // Method 1: Extract using storage path pattern
+            if (fullPath.includes("/storage/v1/object/public/listings/")) {
+              oldImagePath = fullPath.split(
+                "/storage/v1/object/public/listings/"
+              )[1];
+              console.log("Method 1 extracted path:", oldImagePath);
+            }
+            // Method 2: Extract using bucket name
+            else if (fullPath.includes("/listings/")) {
+              const pathParts = fullPath.split("/");
+              const listingsIndex = pathParts.indexOf("listings");
+
+              if (
+                listingsIndex !== -1 &&
+                listingsIndex < pathParts.length - 1
+              ) {
+                oldImagePath = pathParts.slice(listingsIndex + 1).join("/");
+                console.log("Method 2 extracted path:", oldImagePath);
+              }
+            }
+            // Method 3: Just use the filename if we can extract it
+            else {
+              oldImagePath = fullPath.split("/").pop() || "";
+              console.log("Method 3 extracted path:", oldImagePath);
+            }
+          } catch (error) {
+            console.warn("Could not parse old image URL:", error);
+          }
+        }
 
         // Upload image if provided
         if (image) {
-          // Resize image before uploading
+          // Process the image: resize, crop (already done by ImageUpload), and compress
           const resizedImage = await resizeImage(image, 1200, 1200);
+
+          // Convert File to Blob for compression
+          const imageBlob = await resizedImage
+            .arrayBuffer()
+            .then((buffer) => new Blob([buffer], { type: resizedImage.type }));
+
+          // Compress the image
+          const compressedBlob = await compressImage(imageBlob, 0.8, 1200);
+
+          // Convert back to File for upload
+          const processedImage = blobToFile(compressedBlob, image.name);
 
           // Upload to Supabase Storage
           const fileExt = image.name.split(".").pop();
@@ -140,7 +228,12 @@ export function useListingForm(listingId?: string) {
 
           const { error: uploadError } = await supabase.storage
             .from("listings")
-            .upload(filePath, resizedImage);
+            .upload(filePath, processedImage, {
+              upsert: false,
+              metadata: {
+                owner: user.id, // Set the owner metadata for RLS policies
+              },
+            });
 
           if (uploadError) {
             throw uploadError;
@@ -165,6 +258,16 @@ export function useListingForm(listingId?: string) {
 
         if (error) {
           throw error;
+        }
+
+        // Delete the old image if a new one was uploaded
+        if (currentListing?.image_url && image) {
+          // Use the utility function to delete the old image
+          await deleteImageFromStorage(
+            supabase,
+            "listings",
+            currentListing.image_url
+          );
         }
 
         setListing(data);
@@ -214,17 +317,8 @@ export function useListingForm(listingId?: string) {
 
         // Delete the image if it exists
         if (listing.image_url) {
-          // Extract the file path from the URL
-          const url = new URL(listing.image_url);
-          const pathParts = url.pathname.split("/");
-          const filePath = pathParts
-            .slice(pathParts.indexOf("listings"))
-            .join("/");
-
-          if (filePath) {
-            await supabase.storage.from("listings").remove([filePath]);
-            // We don't throw on image deletion error as the listing is already deleted
-          }
+          // Use the utility function to delete the image
+          await deleteImageFromStorage(supabase, "listings", listing.image_url);
         }
 
         setListing(null);

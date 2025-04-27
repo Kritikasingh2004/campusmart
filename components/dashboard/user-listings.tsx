@@ -26,8 +26,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Eye, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { ListingActions } from "@/components/dashboard/listing-actions";
 
 interface UserListingsProps {
   limit?: number;
@@ -36,10 +36,9 @@ interface UserListingsProps {
 
 export function UserListings({ limit, userId }: UserListingsProps) {
   const { user } = useAuth();
-  const { listings, loading, error, deleteListing } = useListings({
+  const { listings, loading, error } = useListings({
     userId: userId || user?.id,
   });
-  const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [displayListings, setDisplayListings] = useState<Listing[]>([]);
 
   // Update display listings when listings change or limit changes
@@ -48,20 +47,6 @@ export function UserListings({ limit, userId }: UserListingsProps) {
       setDisplayListings(limit ? listings.slice(0, limit) : listings);
     }
   }, [listings, limit]);
-
-  // Handle delete
-  const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this listing?")) {
-      setIsDeleting(id);
-      try {
-        await deleteListing(id);
-      } catch (error) {
-        console.error("Error deleting listing:", error);
-      } finally {
-        setIsDeleting(null);
-      }
-    }
-  };
 
   // Loading state
   if (loading) {
@@ -115,7 +100,7 @@ export function UserListings({ limit, userId }: UserListingsProps) {
               You haven&apos;t created any listings yet.
             </p>
             <Button asChild>
-              <Link href="/upload">Create Your First Listing</Link>
+              <Link href="/create-listing">Create Your First Listing</Link>
             </Button>
           </div>
         </CardContent>
@@ -157,26 +142,18 @@ export function UserListings({ limit, userId }: UserListingsProps) {
                     {formatRelativeTime(listing.created_at)}
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="icon" asChild>
-                        <Link href={`/listing/${listing.id}`}>
-                          <Eye className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                      <Button variant="ghost" size="icon" asChild>
-                        <Link href={`/edit-listing/${listing.id}`}>
-                          <Pencil className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        disabled={isDeleting === listing.id}
-                        onClick={() => handleDelete(listing.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
+                    <ListingActions
+                      listing={listing}
+                      variant="buttons"
+                      onDelete={() => {
+                        // Update the listings after deletion
+                        setDisplayListings(
+                          displayListings.filter(
+                            (item) => item.id !== listing.id
+                          )
+                        );
+                      }}
+                    />
                   </TableCell>
                 </TableRow>
               ))}
