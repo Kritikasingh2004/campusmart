@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { NavigationLink } from "@/components/ui/navigation-link";
 import { Separator } from "@/components/ui/separator";
 
 export function Footer() {
@@ -17,28 +17,28 @@ export function Footer() {
             <h3 className="mb-4 text-lg font-medium">Quick Links</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link
+                <NavigationLink
                   href="/"
                   className="text-muted-foreground hover:text-foreground"
                 >
                   Home
-                </Link>
+                </NavigationLink>
               </li>
               <li>
-                <Link
+                <NavigationLink
                   href="/upload"
                   className="text-muted-foreground hover:text-foreground"
                 >
                   Sell Item
-                </Link>
+                </NavigationLink>
               </li>
               <li>
-                <Link
+                <NavigationLink
                   href="/dashboard"
                   className="text-muted-foreground hover:text-foreground"
                 >
                   Dashboard
-                </Link>
+                </NavigationLink>
               </li>
             </ul>
           </div>
@@ -47,36 +47,36 @@ export function Footer() {
             <h3 className="mb-4 text-lg font-medium">Categories</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link
+                <NavigationLink
                   href="/?category=books"
                   className="text-muted-foreground hover:text-foreground"
                 >
                   Books
-                </Link>
+                </NavigationLink>
               </li>
               <li>
-                <Link
+                <NavigationLink
                   href="/?category=electronics"
                   className="text-muted-foreground hover:text-foreground"
                 >
                   Electronics
-                </Link>
+                </NavigationLink>
               </li>
               <li>
-                <Link
+                <NavigationLink
                   href="/?category=furniture"
                   className="text-muted-foreground hover:text-foreground"
                 >
                   Furniture
-                </Link>
+                </NavigationLink>
               </li>
               <li>
-                <Link
+                <NavigationLink
                   href="/?category=clothing"
                   className="text-muted-foreground hover:text-foreground"
                 >
                   Clothing
-                </Link>
+                </NavigationLink>
               </li>
             </ul>
           </div>
@@ -99,18 +99,18 @@ export function Footer() {
             &copy; {new Date().getFullYear()} CampusMart. All rights reserved.
           </p>
           <div className="flex items-center space-x-4">
-            <Link
+            <NavigationLink
               href="/terms"
               className="text-sm text-muted-foreground hover:text-foreground"
             >
               Terms
-            </Link>
-            <Link
+            </NavigationLink>
+            <NavigationLink
               href="/privacy"
               className="text-sm text-muted-foreground hover:text-foreground"
             >
               Privacy
-            </Link>
+            </NavigationLink>
           </div>
         </div>
       </div>

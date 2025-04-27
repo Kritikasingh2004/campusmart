@@ -8,6 +8,7 @@ export interface Listing {
   category: string;
   user_id: string;
   created_at: string;
+  users?: any; // This will hold the joined user data from Supabase
 }
 
 export interface ListingFormData {
@@ -19,15 +20,15 @@ export interface ListingFormData {
   category: string;
 }
 
-export type Category = 
-  | 'books'
-  | 'electronics'
-  | 'furniture'
-  | 'clothing'
-  | 'other';
+export type Category =
+  | "books"
+  | "electronics"
+  | "furniture"
+  | "clothing"
+  | "other";
 
-export type Location = 
-  | 'north-campus'
-  | 'south-campus'
-  | 'east-campus'
-  | 'west-campus';
+export type Location =
+  | "north-campus"
+  | "south-campus"
+  | "east-campus"
+  | "west-campus";

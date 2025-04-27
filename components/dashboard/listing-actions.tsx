@@ -5,6 +5,7 @@ import { useListingForm } from "@/hooks/use-listing-form";
 import { Listing } from "@/types/listing";
 import Link from "next/link";
 import { toast } from "sonner";
+import { useNavigation } from "@/contexts/navigation-context";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -41,6 +42,7 @@ export function ListingActions({
 }: ListingActionsProps) {
   const { deleteListing, isSubmitting } = useListingForm(listing.id);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const { startNavigation } = useNavigation();
 
   // Handle delete
   const handleDelete = async () => {
@@ -89,13 +91,13 @@ export function ListingActions({
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
+            <DropdownMenuItem asChild onClick={() => startNavigation()}>
               <Link href={`/listing/${listing.id}`}>
                 <Eye className="mr-2 h-4 w-4" />
                 View
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
+            <DropdownMenuItem asChild onClick={() => startNavigation()}>
               <Link href={`/edit-listing/${listing.id}`}>
                 <Pencil className="mr-2 h-4 w-4" />
                 Edit
@@ -144,23 +146,44 @@ export function ListingActions({
   // Buttons variant
   return (
     <div className="flex items-center gap-2">
-      <Button variant="ghost" size="icon" asChild>
+      <Button
+        variant="outline"
+        size="sm"
+        asChild
+        className="flex items-center gap-1"
+        onClick={() => startNavigation()}
+      >
         <Link href={`/listing/${listing.id}`}>
-          <Eye className="h-4 w-4" />
+          <Eye className="h-4 w-4 mr-1" /> View
         </Link>
       </Button>
-      <Button variant="ghost" size="icon" asChild>
+      <Button
+        variant="outline"
+        size="sm"
+        asChild
+        className="flex items-center gap-1"
+        onClick={() => startNavigation()}
+      >
         <Link href={`/edit-listing/${listing.id}`}>
-          <Pencil className="h-4 w-4" />
+          <Pencil className="h-4 w-4 mr-1" /> Edit
         </Link>
       </Button>
-      <Button variant="ghost" size="icon" onClick={handleShare}>
-        <Share className="h-4 w-4" />
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleShare}
+        className="flex items-center gap-1"
+      >
+        <Share className="h-4 w-4 mr-1" /> Share
       </Button>
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <Button variant="ghost" size="icon">
-            <Trash2 className="h-4 w-4 text-destructive" />
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-1 text-destructive border-destructive hover:bg-destructive/10"
+          >
+            <Trash2 className="h-4 w-4 mr-1" /> Delete
           </Button>
         </AlertDialogTrigger>
         <AlertDialogContent>

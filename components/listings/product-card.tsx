@@ -1,4 +1,3 @@
-import Link from "next/link";
 import Image from "next/image";
 import { formatPrice } from "@/utils/format";
 import { formatRelativeTime } from "@/utils/date";
@@ -6,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Clock } from "lucide-react";
+import { NavigationLink } from "@/components/ui/navigation-link";
 
 interface ProductCardProps {
   id: string;
@@ -46,7 +46,7 @@ export function ProductCard({
   }
 
   return (
-    <Link href={`/listing/${id}`} className="block h-full">
+    <NavigationLink href={`/listing/${id}`} className="block h-full">
       <Card className="overflow-hidden h-full transition-all hover:shadow-md">
         <CardHeader className="p-0">
           <div className="relative aspect-square overflow-hidden">
@@ -82,6 +82,6 @@ export function ProductCard({
           )}
         </CardContent>
       </Card>
-    </Link>
+    </NavigationLink>
   );
 }

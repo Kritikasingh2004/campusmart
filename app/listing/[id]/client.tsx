@@ -13,7 +13,10 @@ interface ListingDetailClientProps {
   mockListing: Listing;
 }
 
-export function ListingDetailClient({ id, mockListing }: ListingDetailClientProps) {
+export function ListingDetailClient({
+  id,
+  mockListing,
+}: ListingDetailClientProps) {
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -21,17 +24,35 @@ export function ListingDetailClient({ id, mockListing }: ListingDetailClientProp
     const fetchListing = async () => {
       try {
         setLoading(true);
-        // In a real app, this would fetch from Supabase
-        // const { data } = await getListing(id);
-        // setListing(data);
-        
-        // For now, use mock data
-        setTimeout(() => {
+
+        // Import createClient here to avoid "use client" directive issues
+        const { createClient } = await import("@/utils/supabase/client");
+        const supabase = createClient();
+
+        // Fetch the listing from Supabase
+        const { data, error } = await supabase
+          .from("listings")
+          .select("*, users(*)")
+          .eq("id", id)
+          .single();
+
+        if (error) {
+          throw error;
+        }
+
+        if (data) {
+          console.log("Fetched listing:", data);
+          setListing(data);
+        } else {
+          // Fallback to mock data if no real data is found
+          console.log("No listing found, using mock data");
           setListing(mockListing);
-          setLoading(false);
-        }, 500);
+        }
       } catch (error) {
         console.error("Error fetching listing:", error);
+        // Fallback to mock data on error
+        setListing(mockListing);
+      } finally {
         setLoading(false);
       }
     };
@@ -65,8 +86,8 @@ export function ListingDetailClient({ id, mockListing }: ListingDetailClientProp
             <div className="text-center py-12">
               <h2 className="text-2xl font-bold mb-2">Listing Not Found</h2>
               <p className="text-muted-foreground">
-                The listing you&apos;re looking for doesn&apos;t exist or has been
-                removed.
+                The listing you&apos;re looking for doesn&apos;t exist or has
+                been removed.
               </p>
             </div>
           )}

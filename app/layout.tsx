@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/contexts/auth-context";
+import { NavigationProvider } from "@/contexts/navigation-context";
+import { NavigationIndicator } from "@/components/ui/navigation-indicator";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -33,8 +35,11 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
-          {children}
-          <Toaster />
+          <NavigationProvider>
+            <NavigationIndicator />
+            {children}
+            <Toaster />
+          </NavigationProvider>
         </AuthProvider>
       </body>
     </html>

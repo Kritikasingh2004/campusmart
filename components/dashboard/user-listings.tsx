@@ -124,7 +124,7 @@ export function UserListings({ limit, userId }: UserListingsProps) {
                 <TableHead>Category</TableHead>
                 <TableHead>Location</TableHead>
                 <TableHead>Posted</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -141,19 +141,21 @@ export function UserListings({ limit, userId }: UserListingsProps) {
                   <TableCell>
                     {formatRelativeTime(listing.created_at)}
                   </TableCell>
-                  <TableCell className="text-right">
-                    <ListingActions
-                      listing={listing}
-                      variant="buttons"
-                      onDelete={() => {
-                        // Update the listings after deletion
-                        setDisplayListings(
-                          displayListings.filter(
-                            (item) => item.id !== listing.id
-                          )
-                        );
-                      }}
-                    />
+                  <TableCell>
+                    <div className="flex justify-end">
+                      <ListingActions
+                        listing={listing}
+                        variant="buttons"
+                        onDelete={() => {
+                          // Update the listings after deletion
+                          setDisplayListings(
+                            displayListings.filter(
+                              (item) => item.id !== listing.id
+                            )
+                          );
+                        }}
+                      />
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

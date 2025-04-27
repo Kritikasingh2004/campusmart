@@ -8,100 +8,20 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Filters } from "@/components/listings/filters";
 import { ProductCard } from "@/components/listings/product-card";
 import { SearchBar } from "@/components/listings/search-bar";
-import { generatePlaceholderImage } from "@/utils/image";
-import { sortBy, groupBy } from "@/utils/array";
-import { capitalizeWords } from "@/utils/string";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { NavigationLink } from "@/components/ui/navigation-link";
 import { useSearchParams } from "next/navigation";
-
-// Mock data for initial development
-const MOCK_LISTINGS_RAW = [
-  {
-    id: "1",
-    title: "calculus textbook",
-    price: 450,
-    imageUrl: "",
-    location: "north campus",
-    category: "books",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(), // 2 days ago
-  },
-  {
-    id: "2",
-    title: "study desk",
-    price: 1200,
-    imageUrl: "",
-    location: "south campus",
-    category: "furniture",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5 hours ago
-  },
-  {
-    id: "3",
-    title: "scientific calculator",
-    price: 800,
-    imageUrl: "",
-    location: "east campus",
-    category: "electronics",
-    createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 minutes ago
-  },
-  {
-    id: "4",
-    title: "laptop stand",
-    price: 350,
-    imageUrl: "",
-    location: "west campus",
-    category: "electronics",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(), // 2 days ago
-  },
-  {
-    id: "5",
-    title: "college hoodie",
-    price: 600,
-    imageUrl: "",
-    location: "north campus",
-    category: "clothing",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 72).toISOString(), // 3 days ago
-  },
-  {
-    id: "6",
-    title: "chemistry lab manual",
-    price: 250,
-    imageUrl: "",
-    location: "south campus",
-    category: "books",
-    createdAt: new Date(Date.now() - 1000 * 60 * 10).toISOString(), // 10 minutes ago
-  },
-];
-
-// Process the mock data using our utility functions
-const MOCK_LISTINGS = MOCK_LISTINGS_RAW.map((listing) => ({
-  ...listing,
-  title: capitalizeWords(listing.title),
-  location: capitalizeWords(listing.location),
-  category: capitalizeWords(listing.category),
-  imageUrl: generatePlaceholderImage(
-    300,
-    300,
-    listing.title,
-    "e2e8f0",
-    "64748b"
-  ),
-}));
-
-// Add description field to mock data
-const MOCK_LISTINGS_WITH_DESCRIPTION = MOCK_LISTINGS.map((listing) => ({
-  ...listing,
-  description: `This is a ${listing.title.toLowerCase()} available for sale in ${
-    listing.location
-  }.`,
-}));
+import { createClient } from "@/utils/supabase/client";
+import { Listing } from "@/types/listing";
+import { groupBy } from "@/utils/array";
+import { toast } from "sonner";
 
 function HomeContent() {
+  const supabase = createClient();
   const [isLoading, setIsLoading] = useState(true);
-  const [filteredListings, setFilteredListings] = useState(
-    MOCK_LISTINGS_WITH_DESCRIPTION
-  );
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [filteredListings, setFilteredListings] = useState<Listing[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilters, setActiveFilters] = useState({
     category: "all",
@@ -110,37 +30,53 @@ function HomeContent() {
   });
   const searchParams = useSearchParams();
 
-  // Simulate loading state
+  // Fetch listings from Supabase
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
+    const fetchListings = async () => {
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("listings")
+          .select("*, users(*)")
+          .order("created_at", { ascending: false });
 
-    return () => clearTimeout(timer);
-  }, []);
+        if (error) {
+          throw error;
+        }
 
-  // Apply URL search params on initial load
-  useEffect(() => {
-    const category = searchParams.get("category") || "all";
-    const location = searchParams.get("location") || "all";
-    const query = searchParams.get("query") || "";
-    const sort = (searchParams.get("sortBy") as string) || activeFilters.sort;
+        setListings(data || []);
 
-    setSearchQuery(query);
-    setActiveFilters((prev) => ({
-      ...prev,
-      category,
-      location,
-      sort,
-    }));
+        // Apply initial filters after data is loaded
+        const category = searchParams.get("category") || "all";
+        const location = searchParams.get("location") || "all";
+        const query = searchParams.get("query") || "";
+        const sort =
+          (searchParams.get("sortBy") as string) || activeFilters.sort;
 
-    applyFilters(query, { category, location, sort });
-  }, [searchParams, activeFilters.sort]);
+        setSearchQuery(query);
+        setActiveFilters((prev) => ({
+          ...prev,
+          category,
+          location,
+          sort,
+        }));
+
+        applyFilters(data || [], query, { category, location, sort });
+      } catch (err) {
+        console.error("Error fetching listings:", err);
+        toast.error("Failed to load listings");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchListings();
+  }, [supabase, searchParams]);
 
   // Handle search
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    applyFilters(query, activeFilters);
+    applyFilters(listings, query, activeFilters);
   };
 
   // Handle filter changes
@@ -151,11 +87,12 @@ function HomeContent() {
   }) => {
     const newFilters = { ...activeFilters, ...filters };
     setActiveFilters(newFilters);
-    applyFilters(searchQuery, newFilters);
+    applyFilters(listings, searchQuery, newFilters);
   };
 
   // Apply filters to listings
   const applyFilters = (
+    allListings: Listing[],
     query: string,
     filters: {
       category: string;
@@ -163,7 +100,7 @@ function HomeContent() {
       sort: string;
     }
   ) => {
-    let results = [...MOCK_LISTINGS_WITH_DESCRIPTION];
+    let results = [...allListings];
 
     // Apply search query
     if (query) {
@@ -197,14 +134,17 @@ function HomeContent() {
     // Apply sorting
     switch (filters.sort) {
       case "price_asc":
-        results = sortBy(results, "price", "asc");
+        results.sort((a, b) => a.price - b.price);
         break;
       case "price_desc":
-        results = sortBy(results, "price", "desc");
+        results.sort((a, b) => b.price - a.price);
         break;
       case "newest":
       default:
-        results = sortBy(results, "createdAt", "desc");
+        results.sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
         break;
     }
 
@@ -298,7 +238,11 @@ function HomeContent() {
                     location: "all",
                     sort: "newest",
                   });
-                  setFilteredListings(MOCK_LISTINGS_WITH_DESCRIPTION);
+                  applyFilters(listings, "", {
+                    category: "all",
+                    location: "all",
+                    sort: "newest",
+                  });
                 }}
               >
                 Clear All Filters
@@ -325,10 +269,10 @@ function HomeContent() {
                       id={listing.id}
                       title={listing.title}
                       price={listing.price}
-                      imageUrl={listing.imageUrl}
+                      imageUrl={listing.image_url}
                       location={listing.location}
                       category={listing.category}
-                      createdAt={listing.createdAt}
+                      createdAt={listing.created_at}
                     />
                   ))}
                 </div>
@@ -353,13 +297,13 @@ function HomeContent() {
                           >
                             {category}
                           </h3>
-                          <Link
+                          <NavigationLink
                             href={`/?category=${category.toLowerCase()}`}
                             className="text-sm text-primary hover:underline"
                             aria-labelledby={`category-${category.toLowerCase()}`}
                           >
                             View all in {category}
-                          </Link>
+                          </NavigationLink>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                           {listings.slice(0, 4).map((listing) => (
@@ -368,10 +312,10 @@ function HomeContent() {
                               id={listing.id}
                               title={listing.title}
                               price={listing.price}
-                              imageUrl={listing.imageUrl}
+                              imageUrl={listing.image_url}
                               location={listing.location}
                               category={listing.category}
-                              createdAt={listing.createdAt}
+                              createdAt={listing.created_at}
                             />
                           ))}
                         </div>

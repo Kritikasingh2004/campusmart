@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
+import { NavigationLink } from "@/components/ui/navigation-link";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -55,19 +55,19 @@ export function Navbar() {
   return (
     <nav className="border-b bg-background sticky top-0 z-10">
       <div className="container mx-auto flex h-16 items-center px-4">
-        <Link href="/" className="text-xl font-bold">
+        <NavigationLink href="/" className="text-xl font-bold">
           CampusMart
-        </Link>
+        </NavigationLink>
 
         <div className="ml-auto flex items-center space-x-4">
           <Button variant="ghost" asChild>
-            <Link href="/create-listing">Sell Item</Link>
+            <NavigationLink href="/create-listing">Sell Item</NavigationLink>
           </Button>
 
           {!loading && user ? (
             <>
               <Button variant="ghost" asChild>
-                <Link href="/dashboard">Dashboard</Link>
+                <NavigationLink href="/dashboard">Dashboard</NavigationLink>
               </Button>
 
               <DropdownMenu>
@@ -107,10 +107,10 @@ export function Navbar() {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href="/dashboard">Dashboard</Link>
+                    <NavigationLink href="/dashboard">Dashboard</NavigationLink>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/profile">My Profile</Link>
+                    <NavigationLink href="/profile">My Profile</NavigationLink>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
@@ -121,7 +121,7 @@ export function Navbar() {
             </>
           ) : (
             <Button asChild>
-              <Link href="/login">Login</Link>
+              <NavigationLink href="/login">Login</NavigationLink>
             </Button>
           )}
         </div>
