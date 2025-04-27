@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useSupabase } from "./use-supabase";
+import { createClient } from "@/utils/supabase/client";
 import { Listing } from "@/types/listing";
 import { toast } from "sonner";
 
@@ -8,7 +8,7 @@ export function useListings(options?: {
   category?: string;
   location?: string;
 }) {
-  const supabase = useSupabase();
+  const supabase = createClient();
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);

@@ -1,58 +1,79 @@
-import { createClient } from '@/lib/supabase/client';
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextResponse, type NextRequest } from "next/server";
+import { updateSession } from "@/utils/supabase/middleware";
+import { createServerClient } from "@supabase/ssr";
 
-// List of paths that require authentication
-const protectedPaths = [
-  '/dashboard',
-  '/upload',
-  '/edit-profile',
-  '/edit-listing',
-];
-
-// List of paths that should redirect to dashboard if user is already authenticated
-const authPaths = [
-  '/login',
-];
-
+/**
+ * Middleware to handle authentication and protected routes
+ */
 export async function middleware(request: NextRequest) {
-  // Create a Supabase client
-  const supabase = createClient();
-  
-  // Get the pathname from the request
+  // First, update the session
+  const response = await updateSession(request);
+
+  // Get the URL and pathname
   const { pathname } = request.nextUrl;
-  
-  // Check if the path is protected
-  const isProtectedPath = protectedPaths.some(path => pathname.startsWith(path));
-  const isAuthPath = authPaths.some(path => pathname.startsWith(path));
-  
-  // Get the user from Supabase
-  const { data: { session } } = await supabase.auth.getSession();
-  const user = session?.user;
-  
-  // If the path is protected and the user is not authenticated, redirect to login
-  if (isProtectedPath && !user) {
-    const redirectUrl = new URL('/login', request.url);
-    redirectUrl.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(redirectUrl);
+
+  // Create a Supabase client to check the session
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value;
+        },
+        set() {}, // We don't need to set cookies here
+        remove() {}, // We don't need to remove cookies here
+      },
+    }
+  );
+
+  try {
+    // Get the user - this is safe to use for protection
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    // Define protected routes that require authentication
+    const protectedRoutes = [
+      "/dashboard",
+      "/create-listing",
+      "/edit-listing",
+      "/edit-profile",
+      "/messages",
+      "/favorites",
+      "/settings",
+    ];
+
+    // Check if the current route is protected
+    const isProtectedRoute = protectedRoutes.some((route) =>
+      pathname.startsWith(route)
+    );
+
+    // If trying to access a protected route without authentication, redirect to login
+    if (!user && isProtectedRoute) {
+      const redirectUrl = new URL("/login", request.url);
+      redirectUrl.searchParams.set("redirect", pathname);
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    // If trying to access auth routes while already authenticated, redirect to dashboard
+    const authRoutes = ["/login", "/signup", "/forgot-password"];
+    const isAuthRoute = authRoutes.some((route) => pathname === route);
+
+    if (user && isAuthRoute) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+  } catch (error) {
+    console.error("Error in middleware:", error);
+    // Continue with the request even if there's an error
   }
-  
-  // If the path is an auth path and the user is authenticated, redirect to dashboard
-  if (isAuthPath && user) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
-  
-  // Continue with the request
-  return NextResponse.next();
+
+  return response;
 }
 
-// Configure the middleware to run on specific paths
+// Only run middleware on relevant paths (exclude static files)
 export const config = {
   matcher: [
-    '/dashboard/:path*',
-    '/upload',
-    '/edit-profile',
-    '/edit-listing/:path*',
-    '/login',
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

@@ -1,15 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useUser } from "./use-user";
-import { useSupabase } from "./use-supabase";
+import { useAuth } from "@/contexts/auth-context";
+import { createClient } from "@/utils/supabase/client";
 import { useFormSubmit } from "./use-form-submit";
 import { toast } from "sonner";
 import { User } from "@/types/user";
 
 export function useProfile() {
-  const { user } = useUser();
-  const supabase = useSupabase();
+  const { user } = useAuth();
+  const supabase = createClient();
   const [profile, setProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const { handleSubmit, isSubmitting, error } = useFormSubmit<User>();
@@ -46,33 +46,38 @@ export function useProfile() {
     fetchProfile();
   }, [user, supabase]);
 
-  const createProfile = async (profileData: Omit<User, "id" | "created_at">) => {
+  const createProfile = async (
+    profileData: Omit<User, "id" | "created_at">
+  ) => {
     if (!user) {
       throw new Error("User not authenticated");
     }
 
-    return handleSubmit(async () => {
-      const newProfile = {
-        ...profileData,
-        id: user.id,
-      };
+    return handleSubmit(
+      async () => {
+        const newProfile = {
+          ...profileData,
+          id: user.id,
+        };
 
-      const { data, error } = await supabase
-        .from("users")
-        .insert([newProfile])
-        .select()
-        .single();
+        const { data, error } = await supabase
+          .from("users")
+          .insert([newProfile])
+          .select()
+          .single();
 
-      if (error) {
-        throw error;
+        if (error) {
+          throw error;
+        }
+
+        setProfile(data);
+        return data;
+      },
+      {
+        successMessage: "Profile created successfully",
+        errorMessage: "Failed to create profile",
       }
-
-      setProfile(data);
-      return data;
-    }, {
-      successMessage: "Profile created successfully",
-      errorMessage: "Failed to create profile",
-    });
+    );
   };
 
   const updateProfile = async (profileData: Partial<User>) => {
@@ -80,24 +85,27 @@ export function useProfile() {
       throw new Error("User not authenticated");
     }
 
-    return handleSubmit(async () => {
-      const { data, error } = await supabase
-        .from("users")
-        .update(profileData)
-        .eq("id", user.id)
-        .select()
-        .single();
+    return handleSubmit(
+      async () => {
+        const { data, error } = await supabase
+          .from("users")
+          .update(profileData)
+          .eq("id", user.id)
+          .select()
+          .single();
 
-      if (error) {
-        throw error;
+        if (error) {
+          throw error;
+        }
+
+        setProfile(data);
+        return data;
+      },
+      {
+        successMessage: "Profile updated successfully",
+        errorMessage: "Failed to update profile",
       }
-
-      setProfile(data);
-      return data;
-    }, {
-      successMessage: "Profile updated successfully",
-      errorMessage: "Failed to update profile",
-    });
+    );
   };
 
   const uploadAvatar = async (file: File) => {
@@ -105,43 +113,46 @@ export function useProfile() {
       throw new Error("User not authenticated");
     }
 
-    return handleSubmit(async () => {
-      // Upload the file to Supabase Storage
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+    return handleSubmit(
+      async () => {
+        // Upload the file to Supabase Storage
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+        const filePath = `avatars/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(filePath, file);
+        const { error: uploadError } = await supabase.storage
+          .from("avatars")
+          .upload(filePath, file);
 
-      if (uploadError) {
-        throw uploadError;
+        if (uploadError) {
+          throw uploadError;
+        }
+
+        // Get the public URL
+        const { data: publicURL } = supabase.storage
+          .from("avatars")
+          .getPublicUrl(filePath);
+
+        // Update the user profile with the new avatar URL
+        const { data, error } = await supabase
+          .from("users")
+          .update({ avatar_url: publicURL.publicUrl })
+          .eq("id", user.id)
+          .select()
+          .single();
+
+        if (error) {
+          throw error;
+        }
+
+        setProfile(data);
+        return data;
+      },
+      {
+        successMessage: "Avatar uploaded successfully",
+        errorMessage: "Failed to upload avatar",
       }
-
-      // Get the public URL
-      const { data: publicURL } = supabase.storage
-        .from("avatars")
-        .getPublicUrl(filePath);
-
-      // Update the user profile with the new avatar URL
-      const { data, error } = await supabase
-        .from("users")
-        .update({ avatar_url: publicURL.publicUrl })
-        .eq("id", user.id)
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      setProfile(data);
-      return data;
-    }, {
-      successMessage: "Avatar uploaded successfully",
-      errorMessage: "Failed to upload avatar",
-    });
+    );
   };
 
   return {

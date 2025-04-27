@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { signOut } from "@/lib/supabase/auth";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { createClient } from "@/utils/supabase/client";
 
 interface LogoutButtonProps {
   variant?:
@@ -33,11 +33,23 @@ export function LogoutButton({
   const handleLogout = async () => {
     try {
       setIsLoading(true);
-      await signOut();
+
+      // Create a Supabase client
+      const supabase = createClient();
+      
+      // Sign out
+      const { error } = await supabase.auth.signOut();
+
+      if (error) {
+        throw error;
+      }
+
       toast.success("Logged out successfully");
+
+      // Redirect after logout
       router.push(redirectTo);
     } catch (error) {
-      console.error("Logout error:", error);
+      console.error("Error signing out:", error);
       toast.error("Failed to log out");
     } finally {
       setIsLoading(false);

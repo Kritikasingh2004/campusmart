@@ -8,10 +8,10 @@ import { DashboardStats } from "@/components/dashboard/dashboard-stats";
 import { UserListings } from "@/components/dashboard/user-listings";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AuthGuard } from "@/components/auth/auth-guard";
-import { useUser } from "@/hooks/use-user";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function DashboardPage() {
-  const { user } = useUser();
+  const { user } = useAuth();
 
   return (
     <AuthGuard>

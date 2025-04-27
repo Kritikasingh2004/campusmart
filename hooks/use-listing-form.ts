@@ -1,15 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useUser } from "./use-user";
-import { useSupabase } from "./use-supabase";
+import { useAuth } from "@/contexts/auth-context";
+import { createClient } from "@/utils/supabase/client";
 import { useFormSubmit } from "./use-form-submit";
 import { Listing } from "@/types/listing";
 import { resizeImage } from "@/utils/image";
 
 export function useListingForm(listingId?: string) {
-  const { user } = useUser();
-  const supabase = useSupabase();
+  const { user } = useAuth();
+  const supabase = createClient();
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(listingId ? true : false);
   const { handleSubmit, isSubmitting, error } = useFormSubmit<Listing>();

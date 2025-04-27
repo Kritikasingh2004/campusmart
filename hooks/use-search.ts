@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useSupabase } from "./use-supabase";
+import { createClient } from "@/utils/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Listing } from "@/types/listing";
 import { debounce } from "@/utils/function";
@@ -16,7 +16,7 @@ interface SearchFilters {
 }
 
 export function useSearch(initialFilters: SearchFilters = {}) {
-  const supabase = useSupabase();
+  const supabase = createClient();
   const router = useRouter();
   const searchParams = useSearchParams();
 
