@@ -6,11 +6,46 @@ import { Container } from "@/components/layout/container";
 import { PageHeader } from "@/components/layout/page-header";
 import { ProfileForm } from "@/components/profile/profile-form";
 import { AuthGuard } from "@/components/auth/auth-guard";
-import { useUser } from "@/hooks/use-user";
+import { useAuth } from "@/contexts/auth-context";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useEffect, useState } from "react";
+import { User } from "@/types/user";
+import { createClient } from "@/utils/supabase/client";
 
 export default function EditProfilePage() {
-  const { profile, loading } = useUser();
+  const { user, loading: authLoading } = useAuth();
+  const [profile, setProfile] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("users")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+
+        if (error) {
+          throw error;
+        }
+
+        setProfile(data);
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [user]);
 
   return (
     <AuthGuard>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useListings } from "@/hooks/use-listings";
-import { useUser } from "@/hooks/use-user";
+import { useAuth } from "@/contexts/auth-context";
 import { formatPrice } from "@/utils/format";
 import { calculateAverage } from "@/utils/number";
 import { groupBy } from "@/utils/array";
@@ -28,7 +28,7 @@ interface DashboardStatsProps {
 }
 
 export function DashboardStats({ userId }: DashboardStatsProps) {
-  const { user } = useUser();
+  const { user } = useAuth();
   const { listings, loading } = useListings({ userId: userId || user?.id });
   const [stats, setStats] = useState({
     totalListings: 0,

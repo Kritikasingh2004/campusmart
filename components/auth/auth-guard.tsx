@@ -1,46 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@/hooks/use-user";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/contexts/auth-context";
 
 interface AuthGuardProps {
   children: React.ReactNode;
-  fallback?: React.ReactNode;
 }
 
-export function AuthGuard({ children, fallback }: AuthGuardProps) {
+export function AuthGuard({ children }: AuthGuardProps) {
+  const { user, loading } = useAuth();
   const router = useRouter();
-  const { user, loading } = useUser();
-  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  useEffect(() => {
-    if (isClient && !loading && !user) {
+    // If not loading and no user, redirect to login
+    if (!loading && !user) {
       router.push("/login");
     }
-  }, [isClient, loading, user, router]);
+  }, [user, loading, router]);
 
-  if (!isClient || loading) {
-    return (
-      fallback || (
-        <div className="container mx-auto py-10">
-          <Skeleton className="h-8 w-1/3 mb-6" />
-          <Skeleton className="h-4 w-full mb-2" />
-          <Skeleton className="h-4 w-full mb-2" />
-          <Skeleton className="h-4 w-2/3" />
-        </div>
-      )
-    );
-  }
-
-  if (!user) {
+  // If loading, show nothing
+  if (loading) {
     return null;
   }
 
-  return <>{children}</>;
+  // If not loading and user exists, show children
+  return user ? <>{children}</> : null;
 }

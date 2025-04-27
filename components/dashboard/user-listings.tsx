@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useListings } from "@/hooks/use-listings";
-import { useUser } from "@/hooks/use-user";
+import { useAuth } from "@/contexts/auth-context";
 import { Listing } from "@/types/listing";
 
 import { formatRelativeTime } from "@/utils/date";
@@ -35,7 +35,7 @@ interface UserListingsProps {
 }
 
 export function UserListings({ limit, userId }: UserListingsProps) {
-  const { user } = useUser();
+  const { user } = useAuth();
   const { listings, loading, error, deleteListing } = useListings({
     userId: userId || user?.id,
   });

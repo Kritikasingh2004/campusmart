@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { signInWithGoogle } from "@/lib/supabase/auth";
+import { createClient } from "@/utils/supabase/client";
 
 interface LoginButtonProps {
   variant?:
@@ -28,10 +28,39 @@ export function LoginButton({
   const handleLogin = async () => {
     try {
       setIsLoading(true);
-      await signInWithGoogle(redirectTo);
+
+      // Format the redirect URL
+      const formattedRedirect =
+        redirectTo && !redirectTo.startsWith("/")
+          ? `/${redirectTo}`
+          : redirectTo;
+
+      console.log("Login button - Redirecting to:", formattedRedirect);
+
+      // Create a Supabase client
+      const supabase = createClient();
+      
+      // Sign in with Google
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/callback${
+            formattedRedirect ? `?redirect=${encodeURIComponent(formattedRedirect)}` : ""
+          }`,
+          queryParams: {
+            access_type: "offline",
+            prompt: "consent",
+          },
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // The page will be redirected by Supabase, so we don't need to do anything else here
     } catch (error) {
-      console.error("Login error:", error);
-    } finally {
+      console.error("Error signing in:", error);
       setIsLoading(false);
     }
   };
