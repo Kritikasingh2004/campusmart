@@ -129,9 +129,9 @@ export function UserInfo({
       {isCurrentUser && (
         <CardFooter>
           <Button variant="outline" size="sm" asChild className="w-full">
-            <Link href="/edit-profile">
+            <Link href="/profile">
               <Edit className="h-4 w-4 mr-2" />
-              Edit Profile
+              View Profile
             </Link>
           </Button>
         </CardFooter>

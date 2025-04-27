@@ -57,63 +57,70 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 interface ProfileFormProps {
   profile?: User | null;
   isEditMode?: boolean;
+  readOnly?: boolean;
+  onEditToggle?: () => void;
+  onProfileUpdate?: (updatedProfile: User) => void;
 }
 
 export function ProfileForm({
   profile: profileProp,
   isEditMode = false,
+  readOnly = false,
+  onEditToggle,
+  onProfileUpdate,
 }: ProfileFormProps) {
   const {
     profile: userProfile,
     isSubmitting,
     createProfile,
     updateProfile,
+    uploadAvatar,
   } = useProfile();
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
-  // Initialize the form with react-hook-form
+  // Get the user data from props or context
+  const userData = profileProp || userProfile;
+
+  // Initialize the form with react-hook-form and values from the database
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      name: "",
-      location: "",
-      phone: "",
-      bio: "",
+      name: userData?.name || "",
+      location: userData?.location || "",
+      phone: userData?.phone || "",
+      bio: userData?.bio || "",
     },
   });
 
-  // Update form values when profile data is available
+  // Set avatar preview from user data
   useEffect(() => {
-    if (isEditMode && (profileProp || userProfile)) {
-      const userData = profileProp || userProfile;
-      if (userData) {
-        form.reset({
-          name: userData.name || "",
-          location: userData.location || "",
-          phone: userData.phone || "",
-          bio: userData.bio || "",
-        });
-
-        if (userData.avatar_url) {
-          setAvatarPreview(userData.avatar_url);
-        }
-      }
+    if (userData?.avatar_url) {
+      setAvatarPreview(userData.avatar_url);
     }
-  }, [form, profileProp, userProfile, isEditMode]);
+  }, [userData]);
 
   // Handle form submission
-  const onSubmit = async (data: ProfileFormValues) => {
+  const onSubmit = async (data: ProfileFormValues): Promise<void> => {
     try {
+      let updatedProfileData;
+
+      // First update the profile data
       if (isEditMode) {
-        await updateProfile(data);
+        updatedProfileData = await updateProfile(data);
       } else {
-        await createProfile(data);
+        updatedProfileData = await createProfile(data);
       }
 
       // Handle avatar upload if a file was selected
       if (avatarFile) {
-        await updateProfile({ avatar_url: URL.createObjectURL(avatarFile) });
+        // Use the uploadAvatar function we destructured from useProfile hook
+        updatedProfileData = await uploadAvatar(avatarFile);
+      }
+
+      // Call the onProfileUpdate callback if provided
+      if (onProfileUpdate && updatedProfileData) {
+        onProfileUpdate(updatedProfileData);
       }
     } catch (error) {
       console.error("Form submission error:", error);
@@ -126,15 +133,27 @@ export function ProfileForm({
     if (file) {
       const preview = URL.createObjectURL(file);
       setAvatarPreview(preview);
+    } else {
+      // If file is null (avatar removed), reset to the original avatar from profile
+      const userData = profileProp || userProfile;
+      setAvatarPreview(userData?.avatar_url || null);
     }
   };
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
-        <CardTitle>{isEditMode ? "Edit Profile" : "Create Profile"}</CardTitle>
+        <CardTitle>
+          {readOnly
+            ? "My Profile"
+            : isEditMode
+            ? "Edit Profile"
+            : "Create Profile"}
+        </CardTitle>
         <CardDescription>
-          {isEditMode
+          {readOnly
+            ? "Your profile information"
+            : isEditMode
             ? "Update your profile information"
             : "Tell us a bit about yourself to get started"}
         </CardDescription>
@@ -146,6 +165,7 @@ export function ProfileForm({
               <AvatarUpload
                 initialImage={avatarPreview}
                 onImageChange={handleAvatarChange}
+                readOnly={readOnly}
               />
             </div>
 
@@ -156,7 +176,11 @@ export function ProfileForm({
                 <FormItem>
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Your full name" {...field} />
+                    <Input
+                      placeholder="Your full name"
+                      {...field}
+                      disabled={readOnly || isSubmitting}
+                    />
                   </FormControl>
                   <FormDescription>
                     This is how you&apos;ll appear to others on the platform.
@@ -173,7 +197,11 @@ export function ProfileForm({
                 <FormItem>
                   <FormLabel>Location</FormLabel>
                   <FormControl>
-                    <Input placeholder="Your campus location" {...field} />
+                    <Input
+                      placeholder="Your campus location"
+                      {...field}
+                      disabled={readOnly || isSubmitting}
+                    />
                   </FormControl>
                   <FormDescription>
                     This helps buyers know where to meet you.
@@ -190,7 +218,11 @@ export function ProfileForm({
                 <FormItem>
                   <FormLabel>Phone Number (Optional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="10-digit phone number" {...field} />
+                    <Input
+                      placeholder="10-digit phone number"
+                      {...field}
+                      disabled={readOnly || isSubmitting}
+                    />
                   </FormControl>
                   <FormDescription>
                     This will be visible to buyers of your items.
@@ -211,6 +243,7 @@ export function ProfileForm({
                       placeholder="Tell others a bit about yourself"
                       className="resize-none"
                       {...field}
+                      disabled={readOnly || isSubmitting}
                     />
                   </FormControl>
                   <FormDescription>
@@ -221,15 +254,43 @@ export function ProfileForm({
               )}
             />
 
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting
-                ? isEditMode
-                  ? "Updating..."
-                  : "Creating..."
-                : isEditMode
-                ? "Update Profile"
-                : "Create Profile"}
-            </Button>
+            {!readOnly && (
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting
+                  ? isEditMode
+                    ? "Updating..."
+                    : "Creating..."
+                  : isEditMode
+                  ? "Update Profile"
+                  : "Create Profile"}
+              </Button>
+            )}
+
+            {isEditMode && onEditToggle && (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full mt-2"
+                onClick={() => {
+                  // Reset the form to the original values when canceling
+                  form.reset({
+                    name: userData?.name || "",
+                    location: userData?.location || "",
+                    phone: userData?.phone || "",
+                    bio: userData?.bio || "",
+                  });
+
+                  // Reset avatar preview
+                  setAvatarPreview(userData?.avatar_url || null);
+                  setAvatarFile(null);
+
+                  // Toggle back to read-only mode
+                  if (onEditToggle) onEditToggle();
+                }}
+              >
+                Cancel
+              </Button>
+            )}
           </form>
         </Form>
       </CardContent>
