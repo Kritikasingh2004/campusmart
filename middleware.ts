@@ -18,11 +18,12 @@ export async function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
+        getAll() {
+          return request.cookies.getAll();
         },
-        set() {}, // We don't need to set cookies here
-        remove() {}, // We don't need to remove cookies here
+        setAll() {
+          // We don't need to set cookies here as they're handled by updateSession
+        },
       },
     }
   );
