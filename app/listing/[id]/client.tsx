@@ -7,16 +7,13 @@ import { Container } from "@/components/layout/container";
 import { ListingDetail } from "@/components/listings/listing-detail";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Listing } from "@/types/listing";
+import { toast } from "sonner";
 
 interface ListingDetailClientProps {
   id: string;
-  mockListing: Listing;
 }
 
-export function ListingDetailClient({
-  id,
-  mockListing,
-}: ListingDetailClientProps) {
+export function ListingDetailClient({ id }: ListingDetailClientProps) {
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -37,28 +34,32 @@ export function ListingDetailClient({
           .single();
 
         if (error) {
-          throw error;
+          if (error.code === "PGRST116") {
+            // Record not found error
+            toast.error("Listing not found");
+          } else {
+            console.error("Database error:", error.message);
+            toast.error("Failed to load listing");
+          }
+          return;
         }
 
-        if (data) {
-          console.log("Fetched listing:", data);
-          setListing(data);
-        } else {
-          // Fallback to mock data if no real data is found
-          console.log("No listing found, using mock data");
-          setListing(mockListing);
+        if (!data) {
+          toast.error("Listing not found");
+          return;
         }
+
+        setListing(data);
       } catch (error) {
         console.error("Error fetching listing:", error);
-        // Fallback to mock data on error
-        setListing(mockListing);
+        toast.error("Failed to load listing");
       } finally {
         setLoading(false);
       }
     };
 
     fetchListing();
-  }, [id, mockListing]);
+  }, [id]);
 
   return (
     <div className="min-h-screen flex flex-col">

@@ -15,10 +15,9 @@ import { toast } from "sonner";
 
 interface EditListingClientProps {
   id: string;
-  mockListing: Listing;
 }
 
-export function EditListingClient({ id, mockListing }: EditListingClientProps) {
+export function EditListingClient({ id }: EditListingClientProps) {
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
   const { user } = useUser();
@@ -41,36 +40,40 @@ export function EditListingClient({ id, mockListing }: EditListingClientProps) {
           .single();
 
         if (error) {
-          throw error;
+          if (error.code === "PGRST116") {
+            // Record not found error
+            toast.error("Listing not found");
+          } else {
+            console.error("Database error:", error.message);
+            toast.error("Failed to load listing");
+          }
+          return;
         }
 
-        if (data) {
-          console.log("Fetched listing for edit:", data);
-          setListing(data);
-        } else {
-          // Fallback to mock data if no real data is found
-          console.log("No listing found for edit, using mock data");
-          setListing(mockListing);
-          toast.warning("Using demo data as listing was not found");
+        if (!data) {
+          toast.error("Listing not found");
+          return;
         }
+
+        setListing(data);
       } catch (error) {
         console.error("Error fetching listing:", error);
         toast.error("Failed to load listing");
-        // Fallback to mock data on error
-        setListing(mockListing);
       } finally {
         setLoading(false);
       }
     };
 
     fetchListing();
-  }, [id, mockListing, toast]);
+  }, [id]);
 
   // Check if user is the owner of the listing
   useEffect(() => {
-    if (!loading && listing && user && listing.user_id !== user.id) {
-      toast.error("You don't have permission to edit this listing");
-      router.push(`/listing/${id}`);
+    if (!loading && listing && user) {
+      if (listing.user_id !== user.id) {
+        toast.error("You don't have permission to edit this listing");
+        router.push(`/listing/${id}`);
+      }
     }
   }, [listing, loading, user, id, router]);
 
