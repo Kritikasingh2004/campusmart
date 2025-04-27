@@ -2,7 +2,7 @@
 
 CampusMart is a second-hand marketplace application designed for campus communities. It allows students to buy and sell textbooks, furniture, electronics, clothing, and more within their campus environment.
 
-![CampusMart](/campusmart.png)
+![CampusMart](./public/campusmart.png)
 
 ## 📖 About
 
