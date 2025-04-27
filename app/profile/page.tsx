@@ -1,75 +1,34 @@
-"use client";
-
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Container } from "@/components/layout/container";
 import { PageHeader } from "@/components/layout/page-header";
-import { ProfileForm } from "@/components/profile/profile-form";
+import { ProfileClient } from "@/components/profile/profile-client";
 import { AuthGuard } from "@/components/auth/auth-guard";
-import { useAuth } from "@/contexts/auth-context";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useEffect, useState } from "react";
-import { User } from "@/types/user";
-import { createClient } from "@/utils/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Edit } from "lucide-react";
+import { createClient } from "@/utils/supabase/server";
+import { redirect } from "next/navigation";
 
-export default function ProfilePage() {
-  const { user } = useAuth();
-  const [profile, setProfile] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isEditMode, setIsEditMode] = useState(false);
+export default async function ProfilePage() {
+  const supabase = await createClient();
 
-  // Fetch profile data whenever the component mounts or user changes
-  useEffect(() => {
-    const fetchProfile = async () => {
-      if (!user) {
-        setLoading(false);
-        return;
-      }
+  // Get user and redirect if not authenticated
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    redirect("/login");
+  }
 
-      try {
-        setLoading(true);
-        const supabase = createClient();
-        const { data, error } = await supabase
-          .from("users")
-          .select("*")
-          .eq("id", user.id)
-          .single();
+  // Fetch user profile data
+  const { data: profile, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("id", user.id)
+    .single();
 
-        if (error) {
-          throw error;
-        }
-
-        console.log("Fetched profile data:", data);
-        setProfile(data);
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
-
-    // Set up an interval to refresh the profile data every 30 seconds
-    // This ensures the data stays fresh even if the page is open for a long time
-    const refreshInterval = setInterval(fetchProfile, 30000);
-
-    // Clean up the interval when the component unmounts
-    return () => clearInterval(refreshInterval);
-  }, [user]);
-
-  const toggleEditMode = () => {
-    // If we're canceling edit mode, we don't need to do anything special
-    // If we're entering edit mode, we're already showing the current profile data
-    setIsEditMode(!isEditMode);
-  };
-
-  const handleProfileUpdate = (updatedProfile: User) => {
-    setProfile(updatedProfile);
-    setIsEditMode(false);
-  };
+  if (error) {
+    console.error("Error fetching profile:", error);
+  }
 
   return (
     <AuthGuard>
@@ -77,28 +36,13 @@ export default function ProfilePage() {
         <Navbar />
         <main className="flex-1">
           <Container className="py-8">
-            <div className="flex justify-between items-center">
-              <PageHeader
-                title="My Profile"
-                description={
-                  isEditMode
-                    ? "Update your profile information"
-                    : "View your profile information"
-                }
-              />
-              {!isEditMode && (
-                <Button
-                  onClick={toggleEditMode}
-                  className="flex items-center gap-2"
-                >
-                  <Edit className="h-4 w-4" />
-                  Edit Profile
-                </Button>
-              )}
-            </div>
+            <PageHeader
+              title="My Profile"
+              description="View and update your profile information"
+            />
 
             <div className="mt-8">
-              {loading ? (
+              {!profile ? (
                 <div className="space-y-4 max-w-2xl mx-auto">
                   <Skeleton className="h-32 w-32 rounded-full mx-auto" />
                   <Skeleton className="h-10 w-full" />
@@ -107,13 +51,7 @@ export default function ProfilePage() {
                   <Skeleton className="h-10 w-full" />
                 </div>
               ) : (
-                <ProfileForm
-                  profile={profile}
-                  isEditMode={isEditMode}
-                  onEditToggle={toggleEditMode}
-                  onProfileUpdate={handleProfileUpdate}
-                  readOnly={!isEditMode}
-                />
+                <ProfileClient initialProfile={profile} />
               )}
             </div>
           </Container>

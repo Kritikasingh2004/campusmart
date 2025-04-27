@@ -79,10 +79,8 @@ export function ProfileForm({
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
-  // Get the user data from props or context
   const userData = profileProp || userProfile;
 
-  // Initialize the form with react-hook-form
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
@@ -93,10 +91,9 @@ export function ProfileForm({
     },
   });
 
-  // Update form with user data whenever it changes
+  // Initialize form with user data when it becomes available
   useEffect(() => {
     if (userData) {
-      console.log("Setting form values from user data:", userData);
       form.reset({
         name: userData.name || "",
         location: userData.location || "",
@@ -106,91 +103,26 @@ export function ProfileForm({
     }
   }, [form, userData]);
 
-  // Load saved form data from localStorage only when entering edit mode
+  // Set avatar preview from user data and validate the image URL
   useEffect(() => {
-    // Only attempt to load from localStorage when in edit mode
-    if (isEditMode && typeof window !== "undefined") {
-      try {
-        const savedFormData = localStorage.getItem("profileFormData");
-        if (savedFormData) {
-          const parsedData = JSON.parse(savedFormData);
-          // Only use saved data if we have the same user
-          if (userData?.id === parsedData.userId) {
-            console.log("Loading saved form data from localStorage");
-            form.reset(parsedData.formValues);
-
-            // If there's a saved avatar preview, use it
-            if (parsedData.avatarPreview) {
-              setAvatarPreview(parsedData.avatarPreview);
-            }
-          } else {
-            // Clear saved data if different user
-            localStorage.removeItem("profileFormData");
-          }
-        }
-      } catch (error) {
-        console.error("Error loading saved form data:", error);
-        localStorage.removeItem("profileFormData");
-      }
-    }
-  }, [form, isEditMode, userData?.id]);
-
-  // Set avatar preview from user data
-  useEffect(() => {
-    // Only set avatar from user data if we're not in edit mode or there's no avatar file selected
     if (userData?.avatar_url && (!isEditMode || !avatarFile)) {
-      console.log("Setting avatar from user data:", userData.avatar_url);
-
-      // Create an image element to test if the URL is valid
       const img = new Image();
-      img.onload = () => {
-        // Image loaded successfully, set the preview
-        setAvatarPreview(userData.avatar_url || null);
-      };
+      img.onload = () => setAvatarPreview(userData.avatar_url || null);
       img.onerror = () => {
-        // Image failed to load, log error and use fallback
-        console.error(
-          "Failed to load avatar image from URL:",
-          userData.avatar_url
-        );
+        console.error("Failed to load avatar image:", userData.avatar_url);
         setAvatarPreview(null);
       };
-
-      // Start loading the image
       img.src = userData.avatar_url;
     }
   }, [userData, isEditMode, avatarFile]);
 
-  // Save form data to localStorage when it changes
-  useEffect(() => {
-    if (isEditMode && userData?.id) {
-      const formValues = form.getValues();
-      // Only save if the form has been touched
-      if (Object.keys(form.formState.touchedFields).length > 0) {
-        const dataToSave = {
-          userId: userData.id,
-          formValues,
-          avatarPreview,
-          lastUpdated: new Date().toISOString(),
-        };
-        localStorage.setItem("profileFormData", JSON.stringify(dataToSave));
-        console.log("Saved form data to localStorage");
-      }
-    }
-  }, [
-    form,
-    form.formState.touchedFields,
-    isEditMode,
-    userData?.id,
-    avatarPreview,
-  ]);
+  // Removed localStorage persistence in favor of server-side data
 
-  // Handle form submission
   const onSubmit = async (data: ProfileFormValues): Promise<void> => {
     try {
       let updatedProfileData;
 
-      // First update the profile data
+      // Update or create profile data
       if (isEditMode) {
         updatedProfileData = await updateProfile(data);
       } else {
@@ -199,31 +131,25 @@ export function ProfileForm({
 
       // Handle avatar upload if a file was selected
       if (avatarFile) {
-        // Use the uploadAvatar function we destructured from useProfile hook
         updatedProfileData = await uploadAvatar(avatarFile);
       }
 
-      // Call the onProfileUpdate callback if provided
+      // Notify parent component about the update
       if (onProfileUpdate && updatedProfileData) {
         onProfileUpdate(updatedProfileData);
       }
-
-      // Clear saved form data after successful submission
-      localStorage.removeItem("profileFormData");
     } catch (error) {
       console.error("Form submission error:", error);
     }
   };
 
-  // Handle avatar change
   const handleAvatarChange = (file: File | null) => {
     setAvatarFile(file);
     if (file) {
       const preview = URL.createObjectURL(file);
       setAvatarPreview(preview);
     } else {
-      // If file is null (avatar removed), reset to the original avatar from profile
-      const userData = profileProp || userProfile;
+      // Reset to original avatar when removed
       setAvatarPreview(userData?.avatar_url || null);
     }
   };
@@ -360,7 +286,7 @@ export function ProfileForm({
                 variant="outline"
                 className="w-full mt-2"
                 onClick={() => {
-                  // Reset the form to the original values when canceling
+                  // Reset form to original values
                   form.reset({
                     name: userData?.name || "",
                     location: userData?.location || "",
@@ -368,14 +294,11 @@ export function ProfileForm({
                     bio: userData?.bio || "",
                   });
 
-                  // Reset avatar preview
+                  // Reset avatar state
                   setAvatarPreview(userData?.avatar_url || null);
                   setAvatarFile(null);
 
-                  // Clear saved form data
-                  localStorage.removeItem("profileFormData");
-
-                  // Toggle back to read-only mode
+                  // Exit edit mode
                   if (onEditToggle) onEditToggle();
                 }}
               >
