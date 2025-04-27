@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -14,12 +15,42 @@ import {
 import { useAuth } from "@/contexts/auth-context";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { getInitials } from "@/utils/string";
+import { createClient } from "@/utils/supabase/client";
+import { User } from "@/types/user";
 
 export function Navbar() {
   const { user, loading } = useAuth();
+  const [profile, setProfile] = useState<User | null>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
 
-  // Log auth state for debugging
-  console.log("Navbar auth state:", { user: !!user, loading });
+  // Fetch user profile from the users table
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!user) return;
+
+      setProfileLoading(true);
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("users")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+
+        if (error) {
+          console.error("Error fetching user profile:", error);
+        } else {
+          setProfile(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch user profile:", error);
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, [user]);
 
   return (
     <nav className="border-b bg-background sticky top-0 z-10">
@@ -42,14 +73,14 @@ export function Navbar() {
               <DropdownMenu>
                 <DropdownMenuTrigger>
                   <Avatar>
-                    {user.user_metadata?.avatar_url ? (
+                    {profile?.avatar_url ? (
                       <AvatarImage
-                        src={user.user_metadata.avatar_url}
-                        alt={user.user_metadata?.name || "User"}
+                        src={profile.avatar_url}
+                        alt={profile.name || user.user_metadata?.name || "User"}
                         onError={(e) => {
                           console.error(
                             "Failed to load navbar avatar:",
-                            user.user_metadata?.avatar_url
+                            profile.avatar_url
                           );
                           // Hide the image element on error
                           e.currentTarget.style.display = "none";
@@ -62,15 +93,17 @@ export function Navbar() {
                     ) : null}
                     <AvatarFallback
                       data-fallback
-                      hidden={!!user.user_metadata?.avatar_url}
+                      hidden={!!profile?.avatar_url}
                     >
-                      {getInitials(user.user_metadata?.name || "User")}
+                      {getInitials(
+                        profile?.name || user.user_metadata?.name || "User"
+                      )}
                     </AvatarFallback>
                   </Avatar>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>
-                    {user.user_metadata?.name || "My Account"}
+                    {profile?.name || user.user_metadata?.name || "My Account"}
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
