@@ -22,14 +22,15 @@ export interface ListingFormData {
 }
 
 export type Category =
-  | "books"
-  | "electronics"
-  | "furniture"
-  | "clothing"
-  | "other";
+  | "Books"
+  | "Electronics"
+  | "Furniture"
+  | "Clothing"
+  | "Other";
 
 export type Location =
-  | "north-campus"
-  | "south-campus"
-  | "east-campus"
-  | "west-campus";
+  | "Faculty of Engineering and Technology"
+  | "Faculty of Law"
+  | "Faculty of Yoga & Alternative Medicine"
+  | "Institute of Management Sciences"
+  | "Department of Pharmaceutical Sciences";

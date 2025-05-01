@@ -1,19 +1,14 @@
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import { CHART_COLORS } from "@/lib/constants";
 
 interface CategoryPieChartProps {
   data: { name: string; value: number }[];
   colors?: string[];
 }
 
-export function CategoryPieChart({ 
-  data, 
-  colors = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"] 
+export function CategoryPieChart({
+  data,
+  colors = CHART_COLORS,
 }: CategoryPieChartProps) {
   return (
     <ResponsiveContainer width="100%" height="100%">
@@ -31,10 +26,7 @@ export function CategoryPieChart({
           dataKey="value"
         >
           {data.map((_, index) => (
-            <Cell
-              key={`cell-${index}`}
-              fill={colors[index % colors.length]}
-            />
+            <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
           ))}
         </Pie>
         <Tooltip />

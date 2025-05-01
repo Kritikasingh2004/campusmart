@@ -16,24 +16,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
-
-// Categories and locations
-const CATEGORIES = [
-  { value: "all", label: "All Categories" },
-  { value: "books", label: "Books" },
-  { value: "electronics", label: "Electronics" },
-  { value: "furniture", label: "Furniture" },
-  { value: "clothing", label: "Clothing" },
-  { value: "other", label: "Other" },
-];
-
-const LOCATIONS = [
-  { value: "all", label: "All Locations" },
-  { value: "north-campus", label: "North Campus" },
-  { value: "south-campus", label: "South Campus" },
-  { value: "east-campus", label: "East Campus" },
-  { value: "west-campus", label: "West Campus" },
-];
+import { CATEGORIES, LOCATIONS } from "@/lib/constants";
 
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest First" },
@@ -87,8 +70,8 @@ export function EnhancedFilters({
   );
   const [localFilters, setLocalFilters] = useState<FilterValues>({
     query: searchParams.get("query") || "",
-    category: searchParams.get("category") || "all",
-    location: searchParams.get("location") || "all",
+    category: searchParams.get("category") || "All Categories",
+    location: searchParams.get("location") || "All Locations",
     minPrice: initialMinPrice,
     maxPrice: initialMaxPrice,
     sortBy: searchParams.get("sortBy") || "newest",
@@ -99,9 +82,9 @@ export function EnhancedFilters({
     const params = new URLSearchParams();
 
     if (filters.query) params.set("query", filters.query);
-    if (filters.category && filters.category !== "all")
+    if (filters.category && filters.category !== "All Categories")
       params.set("category", filters.category);
-    if (filters.location && filters.location !== "all")
+    if (filters.location && filters.location !== "All Locations")
       params.set("location", filters.location);
     if (filters.minPrice) params.set("minPrice", filters.minPrice);
     if (filters.maxPrice) params.set("maxPrice", filters.maxPrice);
@@ -149,8 +132,8 @@ export function EnhancedFilters({
   const resetFilters = () => {
     const defaultFilters = {
       query: "",
-      category: "all",
-      location: "all",
+      category: "All Categories",
+      location: "All Locations",
       minPrice: "",
       maxPrice: "",
       sortBy: "newest",
@@ -224,7 +207,7 @@ export function EnhancedFilters({
       <div className="space-y-3">
         <h3 className="text-sm font-medium">Category</h3>
         <Select
-          value={localFilters.category || "all"}
+          value={localFilters.category || "All Categories"}
           onValueChange={(value) => handleFilterChange("category", value)}
         >
           <SelectTrigger className="w-full">
@@ -244,7 +227,7 @@ export function EnhancedFilters({
       <div className="space-y-3">
         <h3 className="text-sm font-medium">Location</h3>
         <Select
-          value={localFilters.location || "all"}
+          value={localFilters.location || "All Locations"}
           onValueChange={(value) => handleFilterChange("location", value)}
         >
           <SelectTrigger className="w-full">
@@ -452,7 +435,7 @@ export function EnhancedFilters({
             {/* Basic filters always visible */}
             <div className="flex flex-wrap gap-2">
               <Select
-                value={localFilters.category || "all"}
+                value={localFilters.category || "All Categories"}
                 onValueChange={(value) => handleFilterChange("category", value)}
               >
                 <SelectTrigger className="w-[180px]">
@@ -468,7 +451,7 @@ export function EnhancedFilters({
               </Select>
 
               <Select
-                value={localFilters.location || "all"}
+                value={localFilters.location || "All Locations"}
                 onValueChange={(value) => handleFilterChange("location", value)}
               >
                 <SelectTrigger className="w-[180px]">

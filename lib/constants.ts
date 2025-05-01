@@ -4,28 +4,41 @@
 
 // Categories for listings
 export const CATEGORIES = [
-  { value: "all", label: "All Categories" },
-  { value: "books", label: "Books" },
-  { value: "electronics", label: "Electronics" },
-  { value: "furniture", label: "Furniture" },
-  { value: "clothing", label: "Clothing" },
-  { value: "other", label: "Other" },
+  { value: "All Categories", label: "All Categories" },
+  { value: "Books", label: "Books" },
+  { value: "Electronics", label: "Electronics" },
+  { value: "Furniture", label: "Furniture" },
+  { value: "Clothing", label: "Clothing" },
+  { value: "Other", label: "Other" },
 ];
 
 // Locations for listings
 export const LOCATIONS = [
-  { value: "all", label: "All Locations" },
-  { value: "north-campus", label: "North Campus" },
-  { value: "south-campus", label: "South Campus" },
-  { value: "east-campus", label: "East Campus" },
-  { value: "west-campus", label: "West Campus" },
+  { value: "All Locations", label: "All Locations" },
+  {
+    value: "Faculty of Engineering and Technology",
+    label: "Faculty of Engineering and Technology",
+  },
+  { value: "Faculty of Law", label: "Faculty of Law" },
+  {
+    value: "Faculty of Yoga & Alternative Medicine",
+    label: "Faculty of Yoga & Alternative Medicine",
+  },
+  {
+    value: "Institute of Management Sciences",
+    label: "Institute of Management Sciences",
+  },
+  {
+    value: "Department of Pharmaceutical Sciences",
+    label: "Department of Pharmaceutical Sciences",
+  },
 ];
 
 // Form-specific categories (without "all")
-export const FORM_CATEGORIES = CATEGORIES.filter(cat => cat.value !== "all");
+export const FORM_CATEGORIES = CATEGORIES.filter((cat) => cat.value !== "all");
 
 // Form-specific locations (without "all")
-export const FORM_LOCATIONS = LOCATIONS.filter(loc => loc.value !== "all");
+export const FORM_LOCATIONS = LOCATIONS.filter((loc) => loc.value !== "all");
 
 // Price ranges for filtering
 export const PRICE_RANGES = [
@@ -38,9 +51,9 @@ export const PRICE_RANGES = [
 
 // Chart colors
 export const CHART_COLORS = [
-  "#0088FE", 
-  "#00C49F", 
-  "#FFBB28", 
-  "#FF8042", 
-  "#8884D8"
+  "#0088FE",
+  "#00C49F",
+  "#FFBB28",
+  "#FF8042",
+  "#8884D8",
 ];

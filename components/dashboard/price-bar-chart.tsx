@@ -8,6 +8,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
+import { CHART_COLORS } from "@/lib/constants";
 
 interface PriceBarChartProps {
   data: { name: string; value: number }[];
@@ -15,10 +16,10 @@ interface PriceBarChartProps {
   domain?: [number, number];
 }
 
-export function PriceBarChart({ 
-  data, 
-  colors = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"],
-  domain
+export function PriceBarChart({
+  data,
+  colors = CHART_COLORS,
+  domain,
 }: PriceBarChartProps) {
   return (
     <ResponsiveContainer width="100%" height="100%">
@@ -37,10 +38,7 @@ export function PriceBarChart({
         <Tooltip />
         <Bar dataKey="value" fill="#8884d8">
           {data.map((_, index) => (
-            <Cell
-              key={`cell-${index}`}
-              fill={colors[index % colors.length]}
-            />
+            <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
           ))}
         </Bar>
       </BarChart>
