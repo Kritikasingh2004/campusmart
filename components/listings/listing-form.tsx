@@ -8,6 +8,7 @@ import { useListingForm } from "@/hooks/use-listing-form";
 import { Listing } from "@/types/listing";
 import { ImageUpload } from "./image-upload";
 import { isValidPrice } from "@/utils/validation";
+import { FORM_CATEGORIES, FORM_LOCATIONS } from "@/lib/constants";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -68,21 +69,7 @@ const listingFormSchema = z.object({
 // Infer the type from the schema
 type ListingFormValues = z.infer<typeof listingFormSchema>;
 
-// Categories and locations
-const CATEGORIES = [
-  { value: "books", label: "Books" },
-  { value: "electronics", label: "Electronics" },
-  { value: "furniture", label: "Furniture" },
-  { value: "clothing", label: "Clothing" },
-  { value: "other", label: "Other" },
-];
-
-const LOCATIONS = [
-  { value: "north-campus", label: "North Campus" },
-  { value: "south-campus", label: "South Campus" },
-  { value: "east-campus", label: "East Campus" },
-  { value: "west-campus", label: "West Campus" },
-];
+// Use categories and locations from constants
 
 interface ListingFormProps {
   listing?: Listing | null;
@@ -103,8 +90,8 @@ export function ListingForm({ listing, isEditMode = false }: ListingFormProps) {
       title: "",
       description: "",
       price: "",
-      category: CATEGORIES[0].value,
-      location: LOCATIONS[0].value,
+      category: FORM_CATEGORIES[0].value,
+      location: FORM_LOCATIONS[0].value,
     },
   });
 
@@ -259,7 +246,7 @@ export function ListingForm({ listing, isEditMode = false }: ListingFormProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {CATEGORIES.map((category) => (
+                        {FORM_CATEGORIES.map((category) => (
                           <SelectItem
                             key={category.value}
                             value={category.value}
@@ -294,7 +281,7 @@ export function ListingForm({ listing, isEditMode = false }: ListingFormProps) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {LOCATIONS.map((location) => (
+                      {FORM_LOCATIONS.map((location) => (
                         <SelectItem key={location.value} value={location.value}>
                           {location.label}
                         </SelectItem>

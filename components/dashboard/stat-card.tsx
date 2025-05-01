@@ -1,12 +1,19 @@
-import { ReactNode } from "react";
+import { ReactNode, ElementType } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+type IconComponent = LucideIcon | ElementType;
 
 interface StatCardProps {
   title: ReactNode;
   value: ReactNode;
   description: ReactNode;
-  icon: LucideIcon | (() => JSX.Element);
+  icon: IconComponent | (() => ReactNode);
+  className?: string;
+  iconClassName?: string;
+  valueClassName?: string;
+  descriptionClassName?: string;
 }
 
 export function StatCard({
@@ -14,21 +21,31 @@ export function StatCard({
   value,
   description,
   icon: Icon,
+  className,
+  iconClassName,
+  valueClassName,
+  descriptionClassName,
 }: StatCardProps) {
   return (
-    <Card>
+    <Card className={className}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
         {typeof Icon === "function" && !("$$typeof" in Icon) ? (
           <Icon />
         ) : (
-          // @ts-ignore - We know this is a LucideIcon at this point
-          <Icon className="h-4 w-4 text-muted-foreground" />
+          <Icon
+            className={cn("h-4 w-4 text-muted-foreground", iconClassName)}
+          />
         )}
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        <span className="text-xs text-muted-foreground block">
+        <div className={cn("text-2xl font-bold", valueClassName)}>{value}</div>
+        <span
+          className={cn(
+            "text-xs text-muted-foreground block",
+            descriptionClassName
+          )}
+        >
           {description}
         </span>
       </CardContent>

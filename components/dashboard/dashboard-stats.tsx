@@ -4,7 +4,8 @@ import { useEffect } from "react";
 import { useListings } from "@/hooks/use-listings";
 import { useAuth } from "@/contexts/auth-context";
 import { formatPrice } from "@/utils/format";
-import { calculateDashboardStats, CHART_COLORS } from "@/utils/dashboard";
+import { calculateDashboardStats } from "@/utils/dashboard";
+import { CHART_COLORS } from "@/lib/constants";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -57,6 +58,7 @@ export function DashboardStats({
             value={<Skeleton className="h-8 w-full" />}
             description={<Skeleton className="h-4 w-1/2 mt-2" />}
             icon={() => <Skeleton className="h-4 w-4" />}
+            className="animate-pulse"
           />
         ))}
       </div>
@@ -76,24 +78,28 @@ export function DashboardStats({
           value={stats.totalListings}
           description="Items you have listed for sale"
           icon={Package}
+          iconClassName="text-blue-500"
         />
         <StatCard
           title="Total Value"
           value={formatPrice(stats.totalValue)}
           description="Combined value of all listings"
           icon={DollarSign}
+          iconClassName="text-green-500"
         />
         <StatCard
           title="Average Price"
           value={formatPrice(stats.averagePrice)}
           description="Average price per listing"
           icon={TrendingUp}
+          iconClassName="text-amber-500"
         />
         <StatCard
           title="Most Common Category"
           value={stats.mostCommonCategory}
           description="Your most listed category"
           icon={ShoppingBag}
+          iconClassName="text-purple-500"
         />
       </div>
 
@@ -104,18 +110,21 @@ export function DashboardStats({
           value={stats.totalSold}
           description="Total number of items sold"
           icon={CheckCircle2}
+          iconClassName="text-green-500"
         />
         <StatCard
           title="Revenue"
           value={formatPrice(stats.totalSoldValue)}
           description="Total value of sold items"
           icon={CreditCard}
+          iconClassName="text-blue-500"
         />
         <StatCard
           title="Sell Rate"
           value={stats.sellRate}
           description="Percentage of listings sold"
           icon={TrendingUp}
+          iconClassName="text-amber-500"
         />
       </div>
 
