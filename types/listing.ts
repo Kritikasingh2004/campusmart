@@ -8,6 +8,7 @@ export interface Listing {
   category: string;
   user_id: string;
   created_at: string;
+  is_sold: boolean;
   users?: any; // This will hold the joined user data from Supabase
 }
 
