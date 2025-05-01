@@ -90,7 +90,7 @@ export function useListingsFilter() {
     [searchParams]
   );
 
-  // Fetch listings from Supabase
+  // Fetch listings from Supabase (only once)
   useEffect(() => {
     const fetchListings = async () => {
       setIsLoading(true);
@@ -106,9 +106,6 @@ export function useListingsFilter() {
         }
 
         setListings(data || []);
-
-        // Apply initial filters based on URL parameters
-        applyFilters(data || []);
       } catch (err) {
         console.error("Error fetching listings:", err);
         toast.error("Failed to load listings");
@@ -118,11 +115,22 @@ export function useListingsFilter() {
     };
 
     fetchListings();
-  }, [supabase, searchParams, applyFilters]);
+  }, [supabase]);
 
-  // Handle filter changes
+  // Apply filters whenever search parameters change
+  useEffect(() => {
+    if (listings.length > 0) {
+      applyFilters(listings);
+    }
+  }, [listings, searchParams, applyFilters]);
+
+  // Handle filter changes (for manual filter updates)
   const handleFilterChange = useCallback(() => {
-    applyFilters(listings);
+    // This is now primarily used for programmatic filter changes
+    // Most filtering happens automatically via the searchParams useEffect
+    if (listings.length > 0) {
+      applyFilters(listings);
+    }
   }, [listings, applyFilters]);
 
   return {

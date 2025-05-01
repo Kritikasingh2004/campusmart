@@ -13,10 +13,12 @@ import { NoListingsFound } from "@/components/home/no-listings-found";
 import { ListingsSection } from "@/components/home/listings-section";
 import { CategorySection } from "@/components/home/category-section";
 import { ListingsSkeleton } from "@/components/home/listings-skeleton";
+import { SearchAutocomplete } from "@/components/search/search-autocomplete";
 
 export function HomeContent() {
   const searchParams = useSearchParams();
-  const { isLoading, filteredListings, handleFilterChange } = useListingsFilter();
+  const { isLoading, filteredListings, handleFilterChange } =
+    useListingsFilter();
 
   // Group listings by category for display
   const listingsByCategory = groupBy(filteredListings, "category");
@@ -53,11 +55,27 @@ export function HomeContent() {
     );
   }
 
+  // Handle search from the SearchAutocomplete component
+  // This is now a lightweight function since filtering is handled by the useEffect in useListingsFilter
+  // We keep it for potential future enhancements and to maintain the component API
+  const handleSearch = (query: string) => {
+    // Log the query for debugging purposes
+    console.log("Search query:", query);
+    // No need to call handleFilterChange() as the URL change will trigger the useEffect in useListingsFilter
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-1" id="main-content" aria-label="Main content">
         <HeroSection />
+
+        {/* Search Bar with Autocomplete */}
+        <Container className="py-6">
+          <div className="max-w-3xl mx-auto">
+            <SearchAutocomplete onSearch={handleSearch} />
+          </div>
+        </Container>
 
         <div id="browse">
           <Container className="py-8">
@@ -79,9 +97,9 @@ export function HomeContent() {
                   <NoListingsFound />
                 ) : (
                   <div className="space-y-12">
-                    <ListingsSection 
-                      listings={filteredListings} 
-                      sortBy={searchParams.get("sortBy")} 
+                    <ListingsSection
+                      listings={filteredListings}
+                      sortBy={searchParams.get("sortBy")}
                     />
                     <CategorySection categories={listingsByCategory} />
                   </div>
