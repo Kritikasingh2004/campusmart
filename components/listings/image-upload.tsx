@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, ChangeEvent } from "react";
+import { useState, useRef, useEffect, ChangeEvent } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -22,12 +22,34 @@ export function ImageUpload({
   aspectRatio = "square",
   maxSizeMB = 5,
 }: ImageUploadProps) {
-  const [preview, setPreview] = useState<string | null>(initialImage || null);
+  const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [cropperOpen, setCropperOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [originalFile, setOriginalFile] = useState<File | null>(null);
+
+  // Update preview when initialImage changes
+  useEffect(() => {
+    if (initialImage) {
+      // Test if the image URL is valid
+      const img = document.createElement("img");
+      img.onload = () => {
+        // Image loaded successfully, set the preview
+        setPreview(initialImage);
+      };
+      img.onerror = () => {
+        // Image failed to load, log error and use fallback
+        console.error("Failed to load listing image from URL:", initialImage);
+        setPreview(null);
+      };
+
+      // Start loading the image
+      img.src = initialImage;
+    } else {
+      setPreview(null);
+    }
+  }, [initialImage]);
 
   // Aspect ratio values for the cropper
   const aspectRatioValues = {
@@ -110,7 +132,19 @@ export function ImageUpload({
       >
         {preview ? (
           <>
-            <Image src={preview} alt="Preview" fill className="object-cover" />
+            <Image
+              src={preview}
+              alt="Preview"
+              fill
+              className="object-cover"
+              onError={(e) => {
+                console.error("Failed to load image in component:", preview);
+                // Hide the image element on error
+                e.currentTarget.style.display = "none";
+                // Reset preview state
+                setPreview(null);
+              }}
+            />
             <Button
               type="button"
               size="icon"

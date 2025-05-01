@@ -119,9 +119,8 @@ export function ListingForm({ listing, isEditMode = false }: ListingFormProps) {
         location: listing.location || "",
       });
 
-      if (listing.image_url) {
-        setImagePreview(listing.image_url);
-      }
+      // Set image preview from listing data
+      setImagePreview(listing.image_url || null);
     }
   }, [form, listing, isEditMode]);
 
@@ -147,9 +146,14 @@ export function ListingForm({ listing, isEditMode = false }: ListingFormProps) {
   const handleImageChange = (file: File | null) => {
     setImageFile(file);
     if (file) {
+      // New file selected - create a preview URL
       const preview = URL.createObjectURL(file);
       setImagePreview(preview);
+    } else if (isEditMode && listing?.image_url && !file) {
+      // In edit mode with no new file - revert to original image if available
+      setImagePreview(listing.image_url);
     } else {
+      // No file and no original image
       setImagePreview(null);
     }
   };
