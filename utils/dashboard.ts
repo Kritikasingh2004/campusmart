@@ -1,14 +1,7 @@
 import { calculateAverage } from "./number";
 import { groupBy } from "./array";
-
-// Define types for listings and stats
-export interface Listing {
-  id: string;
-  price: number;
-  category: string;
-  is_sold: boolean;
-  [key: string]: any;
-}
+import { PRICE_RANGES } from "@/lib/constants";
+import { Listing } from "@/types/listing";
 
 export interface DashboardStats {
   totalListings: number;
@@ -21,18 +14,6 @@ export interface DashboardStats {
   mostCommonCategory: string;
   sellRate: string;
 }
-
-// Define price ranges
-export const PRICE_RANGES = [
-  { min: 0, max: 500, name: "₹0-500" },
-  { min: 500, max: 1000, name: "₹500-1000" },
-  { min: 1000, max: 2000, name: "₹1000-2000" },
-  { min: 2000, max: 5000, name: "₹2000-5000" },
-  { min: 5000, max: Infinity, name: "₹5000+" },
-];
-
-// Define chart colors
-export const CHART_COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
 
 // Calculate dashboard stats from listings
 export function calculateDashboardStats(listings: Listing[]): DashboardStats {
@@ -51,18 +32,24 @@ export function calculateDashboardStats(listings: Listing[]): DashboardStats {
 
   // Calculate sold items stats
   const totalSold = soldListings.length;
-  const totalSoldValue = soldListings.reduce((sum, item) => sum + item.price, 0);
+  const totalSoldValue = soldListings.reduce(
+    (sum, item) => sum + item.price,
+    0
+  );
 
   // Determine which listings to use for charts
   // If all items are sold, use all listings for charts
-  const listingsForCharts = activeListings.length > 0 ? activeListings : listings;
+  const listingsForCharts =
+    activeListings.length > 0 ? activeListings : listings;
 
   // Group by category
   const listingsByCategory = groupBy(listingsForCharts, "category");
-  const categoryData = Object.entries(listingsByCategory).map(([name, items]) => ({
-    name,
-    value: items.length,
-  }));
+  const categoryData = Object.entries(listingsByCategory).map(
+    ([name, items]) => ({
+      name,
+      value: items.length,
+    })
+  );
 
   // Create price data
   const priceData = PRICE_RANGES.map((range) => ({
@@ -73,14 +60,16 @@ export function calculateDashboardStats(listings: Listing[]): DashboardStats {
   }));
 
   // Calculate sell rate
-  const sellRate = totalListings > 0
-    ? `${Math.round((totalSold / totalListings) * 100)}%`
-    : "0%";
+  const sellRate =
+    totalListings > 0
+      ? `${Math.round((totalSold / totalListings) * 100)}%`
+      : "0%";
 
   // Get most common category
-  const mostCommonCategory = categoryData.length > 0
-    ? categoryData.sort((a, b) => b.value - a.value)[0].name
-    : "None";
+  const mostCommonCategory =
+    categoryData.length > 0
+      ? categoryData.sort((a, b) => b.value - a.value)[0].name
+      : "None";
 
   return {
     totalListings,
@@ -102,7 +91,7 @@ export function getEmptyStats(): DashboardStats {
     totalValue: 0,
     averagePrice: 0,
     categoryData: [{ name: "No Data", value: 1 }],
-    priceData: PRICE_RANGES.map(range => ({ name: range.name, value: 0 })),
+    priceData: PRICE_RANGES.map((range) => ({ name: range.name, value: 0 })),
     totalSold: 0,
     totalSoldValue: 0,
     mostCommonCategory: "None",
