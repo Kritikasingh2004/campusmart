@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { LoginButton } from "@/components/auth/login-button";
 import { useAuth } from "@/contexts/auth-context";
 import { createClient } from "@/utils/supabase/client";
@@ -17,6 +17,7 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 function LoginContent() {
   const { user, loading } = useAuth();
@@ -166,9 +167,41 @@ function LoginContent() {
   );
 }
 
+// Loading fallback that mimics the structure of the login card
+function LoginLoadingFallback() {
+  return (
+    <Card className="w-full">
+      <CardHeader className="space-y-1">
+        <CardTitle className="text-2xl font-bold">Sign In</CardTitle>
+        <CardDescription>Loading authentication options...</CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
+        <div className="h-10 bg-muted rounded-md animate-pulse" />
+        <div className="h-10 bg-muted rounded-md animate-pulse" />
+
+        <div className="relative py-4">
+          <div className="absolute inset-0 flex items-center">
+            <Separator className="w-full" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">
+              Loading
+            </span>
+          </div>
+        </div>
+
+        <div className="h-16 bg-muted/50 rounded-md animate-pulse" />
+      </CardContent>
+      <CardFooter>
+        <div className="w-full h-6 bg-muted/30 rounded-md animate-pulse" />
+      </CardFooter>
+    </Card>
+  );
+}
+
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<LoginLoadingFallback />}>
       <LoginContent />
     </Suspense>
   );

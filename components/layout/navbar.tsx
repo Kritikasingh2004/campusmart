@@ -21,14 +21,12 @@ import { User } from "@/types/user";
 export function Navbar() {
   const { user, loading } = useAuth();
   const [profile, setProfile] = useState<User | null>(null);
-  const [profileLoading, setProfileLoading] = useState(false);
 
   // Fetch user profile from the users table
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (!user) return;
 
-      setProfileLoading(true);
       try {
         const supabase = createClient();
         const { data, error } = await supabase
@@ -44,8 +42,6 @@ export function Navbar() {
         }
       } catch (error) {
         console.error("Failed to fetch user profile:", error);
-      } finally {
-        setProfileLoading(false);
       }
     };
 

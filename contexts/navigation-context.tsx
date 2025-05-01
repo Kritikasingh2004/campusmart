@@ -1,7 +1,13 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { usePathname, useSearchParams, useRouter } from "next/navigation";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  Suspense,
+} from "react";
+import { usePathname, useRouter } from "next/navigation";
 
 interface NavigationContextType {
   isNavigating: boolean;
@@ -12,20 +18,16 @@ const NavigationContext = createContext<NavigationContextType | undefined>(
   undefined
 );
 
-export function NavigationProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+// Inner provider that uses searchParams
+function NavigationProviderInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const router = useRouter();
   const [isNavigating, setIsNavigating] = useState(false);
+  const router = useRouter();
 
   // Reset the state when the route changes
   useEffect(() => {
     setIsNavigating(false);
-  }, [pathname, searchParams]);
+  }, [pathname]);
 
   // Listen for navigation events from Next.js Router
   useEffect(() => {
@@ -56,6 +58,24 @@ export function NavigationProvider({
     <NavigationContext.Provider value={{ isNavigating, startNavigation }}>
       {children}
     </NavigationContext.Provider>
+  );
+}
+
+// Loading fallback for the navigation provider
+function NavigationProviderFallback() {
+  return null; // Simple fallback that doesn't show anything
+}
+
+// Outer provider that wraps the inner provider in Suspense
+export function NavigationProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <Suspense fallback={<NavigationProviderFallback />}>
+      <NavigationProviderInner>{children}</NavigationProviderInner>
+    </Suspense>
   );
 }
 
