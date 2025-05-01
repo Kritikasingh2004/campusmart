@@ -26,24 +26,50 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
 import { ListingActions } from "@/components/dashboard/listing-actions";
 
 interface UserListingsProps {
   limit?: number;
   userId?: string;
+  showSold?: boolean;
+  refreshTrigger?: number;
+  onStatusChange?: () => void;
 }
 
-export function UserListings({ limit, userId }: UserListingsProps) {
+export function UserListings({
+  limit,
+  userId,
+  showSold,
+  refreshTrigger = 0,
+  onStatusChange,
+}: UserListingsProps) {
   const { user } = useAuth();
-  const { listings, loading, error } = useListings({
+  const { listings, loading, error, fetchListings } = useListings({
     userId: userId || user?.id,
+    showSold,
   });
   const [displayListings, setDisplayListings] = useState<Listing[]>([]);
+  const [activeListings, setActiveListings] = useState<Listing[]>([]);
+  const [soldListings, setSoldListings] = useState<Listing[]>([]);
+
+  // Refresh listings when refreshTrigger changes
+  useEffect(() => {
+    if (refreshTrigger > 0) {
+      fetchListings();
+    }
+  }, [refreshTrigger, fetchListings]);
 
   // Update display listings when listings change or limit changes
   useEffect(() => {
     if (listings) {
+      // Filter active and sold listings
+      const active = listings.filter((listing) => !listing.is_sold);
+      const sold = listings.filter((listing) => listing.is_sold);
+
+      setActiveListings(limit ? active.slice(0, limit) : active);
+      setSoldListings(limit ? sold.slice(0, limit) : sold);
       setDisplayListings(limit ? listings.slice(0, limit) : listings);
     }
   }, [listings, limit]);
@@ -115,53 +141,146 @@ export function UserListings({ limit, userId }: UserListingsProps) {
         <CardDescription>Manage your marketplace listings</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Title</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Posted</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {displayListings.map((listing) => (
-                <TableRow key={listing.id}>
-                  <TableCell className="font-medium max-w-[200px] truncate">
-                    {listing.title}
-                  </TableCell>
-                  <TableCell>{formatPrice(listing.price)}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{listing.category}</Badge>
-                  </TableCell>
-                  <TableCell>{listing.location}</TableCell>
-                  <TableCell>
-                    {formatRelativeTime(listing.created_at)}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex justify-end">
-                      <ListingActions
-                        listing={listing}
-                        variant="buttons"
-                        onDelete={() => {
-                          // Update the listings after deletion
-                          setDisplayListings(
-                            displayListings.filter(
-                              (item) => item.id !== listing.id
-                            )
-                          );
-                        }}
-                      />
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <Tabs defaultValue="active" className="mb-4">
+          <TabsList>
+            <TabsTrigger value="active">Active Listings</TabsTrigger>
+            <TabsTrigger value="sold">Sold Items</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="active">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Price</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Posted</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {activeListings.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-4">
+                        No active listings found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    activeListings.map((listing) => (
+                      <TableRow key={listing.id}>
+                        <TableCell className="font-medium max-w-[200px] truncate">
+                          {listing.title}
+                        </TableCell>
+                        <TableCell>{formatPrice(listing.price)}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{listing.category}</Badge>
+                        </TableCell>
+                        <TableCell>{listing.location}</TableCell>
+                        <TableCell>
+                          {formatRelativeTime(listing.created_at)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex justify-end">
+                            <ListingActions
+                              listing={listing}
+                              variant="buttons"
+                              onDelete={(updatedListing) => {
+                                if (updatedListing && updatedListing.is_sold) {
+                                  // If the listing was marked as sold, add it to soldListings
+                                  setSoldListings([
+                                    updatedListing,
+                                    ...soldListings,
+                                  ]);
+                                  // Also refresh the listings to ensure data consistency
+                                  fetchListings();
+                                  // Notify parent component to update stats
+                                  if (onStatusChange) {
+                                    onStatusChange();
+                                  }
+                                }
+                                // Remove from active listings
+                                setActiveListings(
+                                  activeListings.filter(
+                                    (item) => item.id !== listing.id
+                                  )
+                                );
+                              }}
+                            />
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="sold">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Price</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Posted</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {soldListings.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-4">
+                        No sold items found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    soldListings.map((listing) => (
+                      <TableRow key={listing.id} className="bg-muted/30">
+                        <TableCell className="font-medium max-w-[200px] truncate">
+                          {listing.title}
+                          <Badge variant="secondary" className="ml-2">
+                            Sold
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{formatPrice(listing.price)}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{listing.category}</Badge>
+                        </TableCell>
+                        <TableCell>{listing.location}</TableCell>
+                        <TableCell>
+                          {formatRelativeTime(listing.created_at)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex justify-end">
+                            <ListingActions
+                              listing={listing}
+                              variant="buttons"
+                              onDelete={() => {
+                                // Update the listings after deletion
+                                setSoldListings(
+                                  soldListings.filter(
+                                    (item) => item.id !== listing.id
+                                  )
+                                );
+                                // Also refresh the listings to ensure data consistency
+                                fetchListings();
+                              }}
+                            />
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </TabsContent>
+        </Tabs>
 
         {limit && listings.length > limit && (
           <div className="mt-4 text-center">

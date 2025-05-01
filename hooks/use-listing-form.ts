@@ -108,6 +108,7 @@ export function useListingForm(listingId?: string) {
           ...listingData,
           user_id: user.id,
           image_url: imageUrl,
+          is_sold: false,
         };
 
         const { data, error } = await supabase
@@ -281,6 +282,53 @@ export function useListingForm(listingId?: string) {
     );
   };
 
+  const markAsSold = async () => {
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
+
+    if (!listingId) {
+      throw new Error("Listing ID is required");
+    }
+
+    return handleSubmit(
+      async () => {
+        // Get the listing first to check ownership
+        const { error: fetchError } = await supabase
+          .from("listings")
+          .select("*")
+          .eq("id", listingId)
+          .eq("user_id", user.id) // Ensure the user owns the listing
+          .single();
+
+        if (fetchError) {
+          throw fetchError;
+        }
+
+        // Update the listing to mark as sold
+        const { data, error } = await supabase
+          .from("listings")
+          .update({ is_sold: true })
+          .eq("id", listingId)
+          .eq("user_id", user.id) // Ensure the user owns the listing
+          .select("*, users(*)") // Include user data for display
+          .single();
+
+        if (error) {
+          throw error;
+        }
+
+        setListing(data);
+        return data;
+      },
+      {
+        successMessage: "Listing marked as sold",
+        errorMessage: "Failed to mark listing as sold",
+        redirectTo: "/dashboard",
+      }
+    );
+  };
+
   const deleteListing = async () => {
     if (!user) {
       throw new Error("User not authenticated");
@@ -340,5 +388,6 @@ export function useListingForm(listingId?: string) {
     createListing,
     updateListing,
     deleteListing,
+    markAsSold,
   };
 }

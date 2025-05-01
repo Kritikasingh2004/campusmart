@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useCallback } from "react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Container } from "@/components/layout/container";
@@ -12,6 +13,12 @@ import { useAuth } from "@/contexts/auth-context";
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Function to trigger refresh of both listings and stats
+  const refreshDashboard = useCallback(() => {
+    setRefreshTrigger((prev) => prev + 1);
+  }, []);
 
   return (
     <AuthGuard>
@@ -31,11 +38,19 @@ export default function DashboardPage() {
               </TabsList>
 
               <TabsContent value="listings" className="space-y-4">
-                <UserListings userId={user?.id} />
+                <UserListings
+                  userId={user?.id}
+                  showSold={true}
+                  refreshTrigger={refreshTrigger}
+                  onStatusChange={refreshDashboard}
+                />
               </TabsContent>
 
               <TabsContent value="stats">
-                <DashboardStats userId={user?.id} />
+                <DashboardStats
+                  userId={user?.id}
+                  refreshTrigger={refreshTrigger}
+                />
               </TabsContent>
             </Tabs>
           </Container>

@@ -130,6 +130,7 @@ export function ListingForm({ listing, isEditMode = false }: ListingFormProps) {
       const listingData = {
         ...data,
         price: parseFloat(data.price),
+        is_sold: false,
       };
 
       if (isEditMode && listing?.id) {

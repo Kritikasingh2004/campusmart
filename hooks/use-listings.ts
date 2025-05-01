@@ -7,6 +7,7 @@ export function useListings(options?: {
   userId?: string;
   category?: string;
   location?: string;
+  showSold?: boolean;
 }) {
   const supabase = createClient();
   const [listings, setListings] = useState<Listing[]>([]);
@@ -35,6 +36,11 @@ export function useListings(options?: {
         query = query.eq("location", options.location);
       }
 
+      // Filter by sold status if not explicitly showing sold items
+      if (options?.showSold === undefined || options?.showSold === false) {
+        query = query.eq("is_sold", false);
+      }
+
       const { data, error } = await query;
 
       if (error) {
@@ -51,7 +57,13 @@ export function useListings(options?: {
     } finally {
       setLoading(false);
     }
-  }, [supabase, options?.userId, options?.category, options?.location]);
+  }, [
+    supabase,
+    options?.userId,
+    options?.category,
+    options?.location,
+    options?.showSold,
+  ]);
 
   useEffect(() => {
     fetchListings();

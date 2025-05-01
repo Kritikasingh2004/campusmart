@@ -16,22 +16,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Eye, Pencil, MoreVertical, Trash2, Share } from "lucide-react";
+  Eye,
+  Pencil,
+  MoreVertical,
+  Trash2,
+  Share,
+  CheckCircle2,
+} from "lucide-react";
 
 interface ListingActionsProps {
   listing: Listing;
-  onDelete?: () => void;
+  onDelete?: (updatedListing?: Listing) => void;
   variant?: "dropdown" | "buttons";
 }
 
@@ -40,8 +38,11 @@ export function ListingActions({
   onDelete,
   variant = "dropdown",
 }: ListingActionsProps) {
-  const { deleteListing, isSubmitting } = useListingForm(listing.id);
+  const { deleteListing, markAsSold, isSubmitting } = useListingForm(
+    listing.id
+  );
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showSoldDialog, setShowSoldDialog] = useState(false);
   const { startNavigation } = useNavigation();
 
   // Handle delete
@@ -55,6 +56,21 @@ export function ListingActions({
     } catch (error) {
       console.error("Error deleting listing:", error);
       toast.error("Failed to delete listing");
+    }
+  };
+
+  // Handle mark as sold
+  const handleMarkAsSold = async () => {
+    try {
+      const updatedListing = await markAsSold();
+      toast.success("Listing marked as sold");
+      if (onDelete) {
+        // Pass the updated listing back to the parent component
+        onDelete(updatedListing);
+      }
+    } catch (error) {
+      console.error("Error marking listing as sold:", error);
+      toast.error("Failed to mark listing as sold");
     }
   };
 
@@ -108,6 +124,15 @@ export function ListingActions({
               Share
             </DropdownMenuItem>
             <DropdownMenuSeparator />
+            {!listing.is_sold && (
+              <DropdownMenuItem
+                onClick={() => setShowSoldDialog(true)}
+                className="text-primary focus:text-primary"
+              >
+                <CheckCircle2 className="mr-2 h-4 w-4" />
+                Mark as Sold
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem
               onClick={() => setShowDeleteDialog(true)}
               className="text-destructive focus:text-destructive"
@@ -118,27 +143,27 @@ export function ListingActions({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete your
-                listing and remove it from our servers.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDelete}
-                disabled={isSubmitting}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                {isSubmitting ? "Deleting..." : "Delete"}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <ConfirmationDialog
+          open={showDeleteDialog}
+          onOpenChange={setShowDeleteDialog}
+          title="Are you sure?"
+          description="This action cannot be undone. This will permanently delete your listing and remove it from our servers."
+          confirmText={isSubmitting ? "Deleting..." : "Delete"}
+          onConfirm={handleDelete}
+          isLoading={isSubmitting}
+          variant="destructive"
+        />
+
+        <ConfirmationDialog
+          open={showSoldDialog}
+          onOpenChange={setShowSoldDialog}
+          title="Mark as Sold?"
+          description="This will mark your listing as sold. It will be removed from the marketplace and moved to your sold items section."
+          confirmText={isSubmitting ? "Processing..." : "Mark as Sold"}
+          onConfirm={handleMarkAsSold}
+          isLoading={isSubmitting}
+          variant="primary"
+        />
       </>
     );
   }
@@ -176,8 +201,35 @@ export function ListingActions({
       >
         <Share className="h-4 w-4 mr-1" /> Share
       </Button>
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
+
+      {!listing.is_sold && (
+        <ConfirmationDialog
+          title="Mark as Sold?"
+          description="This will mark your listing as sold. It will be removed from the marketplace and moved to your sold items section."
+          confirmText={isSubmitting ? "Processing..." : "Mark as Sold"}
+          onConfirm={handleMarkAsSold}
+          isLoading={isSubmitting}
+          variant="primary"
+          trigger={
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1 text-primary border-primary hover:bg-primary/10"
+            >
+              <CheckCircle2 className="h-4 w-4 mr-1" /> Mark as Sold
+            </Button>
+          }
+        />
+      )}
+
+      <ConfirmationDialog
+        title="Are you sure?"
+        description="This action cannot be undone. This will permanently delete your listing and remove it from our servers."
+        confirmText={isSubmitting ? "Deleting..." : "Delete"}
+        onConfirm={handleDelete}
+        isLoading={isSubmitting}
+        variant="destructive"
+        trigger={
           <Button
             variant="outline"
             size="sm"
@@ -185,27 +237,8 @@ export function ListingActions({
           >
             <Trash2 className="h-4 w-4 mr-1" /> Delete
           </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your
-              listing and remove it from our servers.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              disabled={isSubmitting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {isSubmitting ? "Deleting..." : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        }
+      />
     </div>
   );
 }

@@ -98,6 +98,7 @@ export function useListingsFilter() {
         const { data, error } = await supabase
           .from("listings")
           .select("*, users(*)")
+          .eq("is_sold", false) // Only fetch listings that are not sold
           .order("created_at", { ascending: false });
 
         if (error) {
