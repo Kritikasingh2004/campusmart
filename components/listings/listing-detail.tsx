@@ -17,7 +17,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MapPin, Calendar, Tag } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { MapPin, Calendar, Tag, AlertCircle, LogIn } from "lucide-react";
 
 interface ListingDetailProps {
   listing: Listing;
@@ -178,7 +179,7 @@ export function ListingDetail({
           <div className="pt-4 flex gap-4">
             {isCurrentUserListing ? (
               <ListingActions listing={listing} variant="buttons" />
-            ) : (
+            ) : user ? (
               <>
                 <Button className="flex-1" asChild>
                   <Link href={`mailto:${sellerData?.email || ""}`}>
@@ -191,6 +192,24 @@ export function ListingDetail({
                   </Button>
                 )}
               </>
+            ) : (
+              <div className="w-full space-y-3">
+                <Alert variant="default" className="bg-muted/50">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    Contact details are only visible to logged-in users for
+                    security purposes.
+                  </AlertDescription>
+                </Alert>
+                <div className="flex justify-center">
+                  <Button asChild>
+                    <Link href="/login" className="w-full">
+                      <LogIn className="h-4 w-4 mr-2" />
+                      Log in
+                    </Link>
+                  </Button>
+                </div>
+              </div>
             )}
           </div>
         </div>

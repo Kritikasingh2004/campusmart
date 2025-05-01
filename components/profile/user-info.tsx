@@ -2,6 +2,7 @@
 
 import { User } from "@/types/user";
 import { useProfile } from "@/hooks/use-profile";
+import { useUser } from "@/hooks/use-user";
 import { formatRelativeTime } from "@/utils/date";
 import { getInitials } from "@/utils/string";
 import Link from "next/link";
@@ -18,7 +19,7 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Phone, Calendar, Mail, Edit } from "lucide-react";
+import { MapPin, Calendar, Mail, Edit, Lock } from "lucide-react";
 
 interface UserInfoProps {
   user?: User | null;
@@ -30,9 +31,13 @@ export function UserInfo({
   isCurrentUser = false,
 }: UserInfoProps) {
   const { profile, loading } = useProfile();
+  const { user: currentUser } = useUser();
 
   // Use provided user or profile from hook
   const user = propUser || profile;
+
+  // Check if the current user is logged in
+  const isLoggedIn = !!currentUser;
 
   // Loading state
   if (loading) {
@@ -104,7 +109,14 @@ export function UserInfo({
           <CardTitle className="text-xl">{user.name}</CardTitle>
           <CardDescription className="flex items-center mt-1">
             <Mail className="h-3.5 w-3.5 mr-1" />
-            {user.email || "Email not provided"}
+            {isLoggedIn ? (
+              user.email || "Email not provided"
+            ) : (
+              <span className="flex items-center">
+                <Lock className="h-3 w-3 mr-1" />
+                Login to view
+              </span>
+            )}
           </CardDescription>
           <div className="flex flex-wrap gap-2 mt-2">
             {user.location && (
@@ -130,15 +142,7 @@ export function UserInfo({
           </div>
         )}
 
-        {user.phone && (
-          <div>
-            <h3 className="text-sm font-medium mb-1">Contact</h3>
-            <p className="text-sm text-muted-foreground flex items-center">
-              <Phone className="h-3.5 w-3.5 mr-1" />
-              {user.phone}
-            </p>
-          </div>
-        )}
+        {/* Phone number is not displayed for privacy reasons */}
       </CardContent>
 
       {isCurrentUser && (
