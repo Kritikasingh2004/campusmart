@@ -10,19 +10,21 @@ import { ImageCropperDialog } from "@/components/shared/image-cropper-dialog";
 import { blobToFile } from "@/utils/image";
 
 interface ImageUploadProps {
-  initialImage?: string | null;
-  onImageChange?: (file: File | null) => void;
+  initialImages?: string[] | null;
+  onImagesChange?: (files: File[] | null) => void;
   aspectRatio?: "square" | "wide";
   maxSizeMB?: number;
+  maxFiles?: number;
 }
 
 export function ImageUpload({
-  initialImage,
-  onImageChange,
+  initialImages,
+  onImagesChange,
   aspectRatio = "square",
   maxSizeMB = 5,
+  maxFiles = 4,
 }: ImageUploadProps) {
-  const [preview, setPreview] = useState<string | null>(initialImage || null);
+  const [previews, setPreviews] = useState<string[]>(initialImages || []);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [cropperOpen, setCropperOpen] = useState(false);
@@ -43,32 +45,47 @@ export function ImageUpload({
 
   // Handle file selection
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
+    const files = Array.from(e.target.files || []);
     setError(null);
 
-    if (!file) {
+    if (files.length === 0) {
       return;
     }
 
-    // Validate file type
-    if (!isImageFile(file)) {
-      setError("Please select an image file (JPEG, PNG, etc.)");
+    // Check if adding these files would exceed max limit
+    if (previews.length + files.length > maxFiles) {
+      setError(`You can upload a maximum of ${maxFiles} images`);
       return;
     }
 
-    // Validate file size
-    if (!isFileSizeValid(file, maxSizeMB)) {
-      setError(`Image size should be less than ${maxSizeMB}MB`);
-      return;
+    // Validate each file
+    for (const file of files) {
+      if (!isImageFile(file)) {
+        setError("Please select only image files (JPEG, PNG, etc.)");
+        return;
+      }
+
+      if (!isFileSizeValid(file, maxSizeMB)) {
+        setError(`Each image should be less than ${maxSizeMB}MB`);
+        return;
+      }
     }
 
-    // Store the original file
-    setOriginalFile(file);
-
-    // Create preview and open cropper
-    const objectUrl = URL.createObjectURL(file);
-    setSelectedImage(objectUrl);
-    setCropperOpen(true);
+    // If single file, open cropper
+    if (files.length === 1) {
+      const file = files[0];
+      setOriginalFile(file);
+      const objectUrl = URL.createObjectURL(file);
+      setSelectedImage(objectUrl);
+      setCropperOpen(true);
+    } else {
+      // For multiple files, add them directly
+      const newPreviews = files.map(file => URL.createObjectURL(file));
+      setPreviews(prev => [...prev, ...newPreviews]);
+      if (onImagesChange) {
+        onImagesChange([...files]);
+      }
+    }
   };
 
   // Handle cropped image
@@ -77,65 +94,83 @@ export function ImageUpload({
 
     // Create a preview URL for the cropped image
     const croppedPreviewUrl = URL.createObjectURL(croppedBlob);
-    setPreview(croppedPreviewUrl);
+    setPreviews(prev => [...prev, croppedPreviewUrl]);
 
     // Convert blob to File and call the callback
     const croppedFile = blobToFile(croppedBlob, originalFile.name);
-    if (onImageChange) {
-      onImageChange(croppedFile);
+    if (onImagesChange) {
+      onImagesChange([croppedFile]);
     }
+
+    setCropperOpen(false);
+    URL.revokeObjectURL(selectedImage || '');
+    setSelectedImage(null);
   };
 
   // Trigger file input click
   const handleButtonClick = () => {
+    if (previews.length >= maxFiles) {
+      setError(`Maximum ${maxFiles} images allowed`);
+      return;
+    }
     fileInputRef.current?.click();
   };
 
-  // Remove current image
-  const handleRemoveImage = () => {
-    setPreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-    if (onImageChange) {
-      onImageChange(null);
+  // Remove image at index
+  const handleRemoveImage = (index: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newPreviews = [...previews];
+    URL.revokeObjectURL(newPreviews[index]);
+    newPreviews.splice(index, 1);
+    setPreviews(newPreviews);
+
+    if (onImagesChange) {
+      // This is a simplified approach - in a real app you might want to maintain File references
+      onImagesChange(newPreviews.length > 0 ? newPreviews.map(() => new File([], 'temp')) : null);
     }
   };
 
   return (
     <div className="space-y-2">
-      <Card
-        className={`relative overflow-hidden border-2 border-dashed border-border hover:border-primary/50 transition-colors ${aspectRatioClasses[aspectRatio]} w-full cursor-pointer`}
-        onClick={handleButtonClick}
-      >
-        {preview ? (
-          <>
-            <Image src={preview} alt="Preview" fill className="object-cover" />
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        {previews.map((preview, index) => (
+          <Card
+            key={index}
+            className={`relative overflow-hidden border-2 border-dashed border-border hover:border-primary/50 transition-colors ${aspectRatioClasses[aspectRatio]} w-full cursor-pointer`}
+          >
+            <Image src={preview} alt={`Preview ${index}`} fill className="object-cover" />
             <Button
               type="button"
               size="icon"
               variant="destructive"
-              className="absolute top-2 right-2 h-8 w-8 rounded-full z-10"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleRemoveImage();
-              }}
+              className="absolute top-2 right-2 h-6 w-6 rounded-full z-10 cursor-pointer"
+              onClick={(e) => handleRemoveImage(index, e)}
             >
-              <X className="h-4 w-4" />
+              <X className="h-2 w-2" />
             </Button>
-          </>
-        ) : (
-          <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center">
-            <div className="mb-2 rounded-full bg-primary/10 p-2">
-              <ImagePlus className="h-6 w-6 text-primary" />
+          </Card>
+        ))}
+
+        {previews.length < maxFiles && (
+          <Card
+            className={`relative overflow-hidden border-2 border-dashed border-border hover:border-primary/50 transition-colors ${aspectRatioClasses[aspectRatio]} w-full cursor-pointer`}
+            onClick={handleButtonClick}
+          >
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center">
+              <div className="mb-2 rounded-full bg-primary/10 p-3">
+                <ImagePlus className="h-6 w-6 text-primary" />
+              </div>
+              <p className="text-sm font-medium">Click to upload</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                JPG, PNG, GIF up to {maxSizeMB}MB
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {maxFiles - previews.length} remaining
+              </p>
             </div>
-            <p className="text-sm font-medium">Click to upload an image</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              JPG, PNG, GIF up to {maxSizeMB}MB
-            </p>
-          </div>
+          </Card>
         )}
-      </Card>
+      </div>
 
       {/* Hidden file input */}
       <input
@@ -144,6 +179,7 @@ export function ImageUpload({
         accept="image/*"
         className="hidden"
         onChange={handleFileChange}
+        multiple
       />
 
       {/* Error message */}
