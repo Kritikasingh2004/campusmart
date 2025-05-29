@@ -27,15 +27,21 @@ export function useListingsFilter() {
 
       // Apply search query
       if (query) {
-        const searchTerms = query.toLowerCase().split(" ");
-        results = results.filter((listing) =>
-          searchTerms.some(
-            (term) =>
-              listing.title.toLowerCase().includes(term) ||
-              listing.category.toLowerCase().includes(term) ||
-              listing.description.toLowerCase().includes(term)
-          )
-        );
+        const trimmedQuery = query.trim();
+        if (trimmedQuery) {
+          const searchTerms = trimmedQuery
+            .toLowerCase()
+            .split(" ")
+            .filter((term) => term.length > 0);
+          results = results.filter((listing) =>
+            searchTerms.some(
+              (term) =>
+                listing.title.toLowerCase().includes(term) ||
+                listing.category.toLowerCase().includes(term) ||
+                listing.description.toLowerCase().includes(term)
+            )
+          );
+        }
       }
 
       // Apply category filter

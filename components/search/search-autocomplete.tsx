@@ -27,10 +27,17 @@ export function SearchAutocomplete({
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Sync searchQuery with URL parameters
+  useEffect(() => {
+    const queryFromUrl = searchParams.get("query") || "";
+    setSearchQuery(queryFromUrl);
+  }, [searchParams]);
+
   // Fetch suggestions based on search query
   const fetchSuggestions = useCallback(
     async (query: string) => {
-      if (!query || query.length < 1) {
+      const trimmedQuery = query.trim();
+      if (!trimmedQuery || trimmedQuery.length < 1) {
         setSuggestions([]);
         return;
       }
@@ -43,7 +50,7 @@ export function SearchAutocomplete({
             "id, title, price, category, description, image_url, location, user_id, created_at, is_sold"
           )
           .eq("is_sold", false)
-          .ilike("title", `%${query}%`)
+          .ilike("title", `%${trimmedQuery}%`)
           .limit(5);
 
         if (error) {
@@ -94,10 +101,16 @@ export function SearchAutocomplete({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Trim the search query to remove leading/trailing whitespace
+    const trimmedQuery = searchQuery.trim();
+
+    // Update the local state with trimmed query
+    setSearchQuery(trimmedQuery);
+
     // Update URL with search query
     const params = new URLSearchParams(searchParams.toString());
-    if (searchQuery) {
-      params.set("query", searchQuery);
+    if (trimmedQuery) {
+      params.set("query", trimmedQuery);
     } else {
       params.delete("query");
     }
@@ -111,18 +124,19 @@ export function SearchAutocomplete({
     // Call the onSearch callback if provided
     // This is optional since the URL change will trigger filtering in useListingsFilter
     if (onSearch) {
-      onSearch(searchQuery);
+      onSearch(trimmedQuery);
     }
   };
 
   // Handle suggestion selection
   const handleSelectSuggestion = (listing: Listing) => {
-    setSearchQuery(listing.title);
+    const trimmedTitle = listing.title.trim();
+    setSearchQuery(trimmedTitle);
     setIsOpen(false);
 
     // Update URL with search query
     const params = new URLSearchParams(searchParams.toString());
-    params.set("query", listing.title);
+    params.set("query", trimmedTitle);
 
     // Update URL without refreshing the page
     router.replace(`/?${params.toString()}`, { scroll: false });
@@ -130,7 +144,7 @@ export function SearchAutocomplete({
     // Call the onSearch callback if provided
     // This is optional since the URL change will trigger filtering in useListingsFilter
     if (onSearch) {
-      onSearch(listing.title);
+      onSearch(trimmedTitle);
     }
   };
 
