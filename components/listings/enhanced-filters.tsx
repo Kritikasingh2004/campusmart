@@ -369,8 +369,7 @@ export function EnhancedFilters({
     return (
       <div className={`space-y-4 ${className}`}>
         <div className="md:hidden">
-          <SearchBar />
-          <div className="flex items-center justify-between mt-4">
+          <div className="flex items-center justify-between">
             <MobileFilterTrigger />
             <Sheet open={showMobileFilters} onOpenChange={setShowMobileFilters}>
               <SheetContent
