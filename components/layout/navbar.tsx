@@ -110,7 +110,9 @@ export function Navbar() {
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <LogoutButton variant="ghost">Logout</LogoutButton>
+                    <LogoutButton variant="ghost" className="w-full text-left">
+                      Logout
+                    </LogoutButton>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
