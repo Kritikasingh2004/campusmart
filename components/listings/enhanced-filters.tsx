@@ -81,7 +81,9 @@ export function EnhancedFilters({
   const updateUrl = (filters: FilterValues) => {
     const params = new URLSearchParams();
 
-    if (filters.query) params.set("query", filters.query);
+    // Trim the query before setting it in URL
+    const trimmedQuery = filters.query?.trim();
+    if (trimmedQuery) params.set("query", trimmedQuery);
     if (filters.category && filters.category !== "All Categories")
       params.set("category", filters.category);
     if (filters.location && filters.location !== "All Locations")
