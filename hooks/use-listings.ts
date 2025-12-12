@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { Listing } from "@/types/listing";
 import { toast } from "sonner";
@@ -49,11 +49,11 @@ export function useListings(options?: {
 
       setListings(data || []);
     } catch (err) {
+      toast.error("Failed to load listings");
       console.error("Error fetching listings:", err);
       setError(
-        err instanceof Error ? err : new Error("Failed to fetch listings")
+        err instanceof Error ? err : new Error("Failed to fetch listings"),
       );
-      toast.error("Failed to load listings");
     } finally {
       setLoading(false);
     }
